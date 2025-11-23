@@ -20,13 +20,13 @@ app.add_middleware(
 
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
 
-# 2. '/static' 경로로 들어오는 요청은 static 폴더의 파일을 보여줍니다. (css, js 등)
+# '/static' 경로로 들어오는 요청은 static 폴더의 파일을 보여줍니다. (css, js 등)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# 3. 루트 경로('/') 접속 시 index.html 파일을 반환합니다.
+# 루트 경로('/') 접속 시 index.html 파일을 반환
 @app.get("/")
 async def read_root():
-    # FileResponse(파일경로) 형태로 작성해야 합니다.
+    # FileResponse(파일경로) 형태로 작성
     return FileResponse(os.path.join(static_dir, "index.html"))
 
 @app.post("/upload/team-meeting")
