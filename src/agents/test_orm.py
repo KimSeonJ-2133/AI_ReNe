@@ -49,7 +49,7 @@ def run_orm_test():
         if fetched_user:
             print(f"조회 성공! 가져온 데이터: {fetched_user}\n")
         else:
-            print("데이터 조회 실패...\n")
+            print("데이터 조회 실패!\n")
 
     except Exception as e:
         print(f"에러 발생: {e}")
