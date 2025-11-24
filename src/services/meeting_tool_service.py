@@ -2,14 +2,11 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-
 # LangChain
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
-# 기존 Google Utils (경로에 맞게 수정 필요)
-# sys.path.append(...) 가 필요할 수 있습니다.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from utils.google_utils import MimeType, mkfile, auth, append_datas_to_spreadsheet, GResult
 
@@ -25,7 +22,7 @@ llm = ChatOpenAI(
 )
 
 current_path = Path(__file__).resolve()
-# 프로젝트 루트 경로 설정 (환경에 맞게 조정하세요)
+# 프로젝트 루트 경로 설정
 PROJECT_ROOT = current_path.parent.parent.parent
 CREDENTIALS_FILE_PATH = PROJECT_ROOT / 'credentials.json'
 SHEET_NAME = 'Notes'
@@ -43,7 +40,7 @@ def _parse_with_open_ai(content: str, system_prompt: str) -> dict:
 
 
 def format_for_tasks(task_list: list) -> str:
-    """ 리스트 데이터를 - (이름) 작업 내용 형식으로 변환 """
+    """ 리스트 데이터를 - (작업 이름) 작업 내용 형식으로 변환 """
     if not task_list: return ""
     if isinstance(task_list, dict): task_list = [task_list]
 
