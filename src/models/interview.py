@@ -24,6 +24,8 @@ class ReNeInterview(Base):
     growth_rene_detail = relationship("GrowthReneDetail", back_populates="rene_interview", uselist=False, cascade="all, delete-orphan")
     trials_rene_detail = relationship("TrialsReneDetail", back_populates="rene_interview", uselist=False, cascade="all, delete-orphan")
 
+
+# 2. 시작의 르네 인터뷰 (SubType)
 class BeginningReneDetail(Base):
     __tablename__ = "beginning_rene_detail"
 
@@ -36,6 +38,8 @@ class BeginningReneDetail(Base):
 
     rene_interview = relationship("ReneInterview", back_populates="beginning_rene_detail")
 
+
+# 3. 성장의 르네 인터뷰 (SubType)
 class GrowthReneDetail(Base):
     __tablename__ = "growth_rene_detail"
 
@@ -45,6 +49,8 @@ class GrowthReneDetail(Base):
 
     rene_interview = relationship("ReneInterview", back_populates="growth_rene_detail")
 
+
+# 4. 시련의 르네 인터뷰 (SubType)
 class TrialsReneDetail(Base):
     __tablename__ = "trials_rene_detail"
 
@@ -60,7 +66,7 @@ class TrialsReneDetail(Base):
     rene_interview = relationship("ReneInterview", back_populates="trials_rene_detail")
 
 
-    # 5. 기업 AI 면접
+# 5. 기업 AI 면접
 class CompanyAIInterview(Base):
     __tablename__ = "company_ai_interview"
 
