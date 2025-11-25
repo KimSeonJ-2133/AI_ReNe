@@ -10,22 +10,41 @@ class Jobseeker(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    email = Column(String(255), unique=True, nullable=False)
+    email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=False)
     birthdate = Column(Date, nullable=False)
-    gender = Column(String(10), nullable=False)  # FEMALE, MALE
+    gender = Column(String((10), nullable=False)) # Female, Male
     address = Column(String(255), nullable=False)
-    verified_grade = Column(String(50), nullable=False)
-    policy_agree_bool = Column(Boolean, default=False, nullable=False)
-    is_activate = Column(Boolean, default=True, nullable=False)
-    is_docs_submit = Column(String(10), nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    verified_grade = Column(String(50), nullable=False) # NOT_VERIFIED, DOCS_VERIFIED, PERSONAL_VERIFIED,  ALL_VERIFIED
+    policy_agree_bool = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    is_docs_submit = Column(String(20), nullable=True), # NONE, RESUME, PORTFOLIO, ALL
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    # 관계 설정 (Cascade 삭제 설정 포함)
-    resumes = relationship("Resume", back_populates="jobseeker", cascade="all, delete-orphan")
-    portfolios = relationship("Portfolio", back_populates="jobseeker", cascade="all, delete-orphan")
-    rene_interviews = relationship("ReneInterview", back_populates="jobseeker", cascade="all, delete-orphan")
-    company_ai_interviews = relationship("CompanyAIInterview", back_populates="jobseeker", cascade="all, delete-orphan")
-    non_contact_interviews = relationship("NonContactInterview", back_populates="jobseeker", cascade="all, delete-orphan")
-    vector_mappings = relationship("JobseekerVectorMapping", back_populates="jobseeker", cascade="all, delete-orphan")
+    # 관계 설정 (cascade 삭제 설정)
+
+class Company(Base):
+    __tablename__ = "company"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    company_scale = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=False, unique=True)
+    password = Column(String(255), nullable=False)
+    address = Column(String(255), nullable=False)
+    business_number = Column(String(100), nullable=False) 
+    policy_agree_bool = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    # 관계 설정 (cascade 삭제 설정)
+
+class JobGroup(Base):
+    __tablename__ = "job_group"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    # 관계 설정(cascade 삭제 설정)
