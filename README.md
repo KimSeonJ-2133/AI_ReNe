@@ -8,8 +8,9 @@
 ### Key Features
 * **AI Profile Generation (시작의 레네)**
     * 사용자와의 대화를 통해 핵심 역량 키워드와 요약 프로필을 자동 생성합니다.
+    * 문서 업로드 과정을 거쳤다면, 프로필을 검증 & 갱신하는 역할을 수행합니다.
 * **Training Simulation (성장의 레네)**
-    * 직무별 모의 면접을 통해 캐릭터 스탯(육각형 그래프)을 성장시키고 배지를 획득합니다.
+    * 직무별 모의 면접을 통해, 구직자의 구체적인 기술적 Depth 를 검증합니다.
 * **Company Simulation (시련의 레네)**
     * 특정 기업의 RAG 데이터(인재상, JD)를 기반으로 한 고난도 압박 면접을 연습합니다.
 * **Real Interview (실전/P2P)**
@@ -21,7 +22,7 @@
 ---
 
 ## 2. Directory Structure & Naming Convention
-본 프로젝트는 **FastAPI**를 기반으로 하며, AI Agent 로직과 API 서버가 통합된 구조입니다. AI 코딩 어시스턴트는 아래 구조를 엄격히 준수해야 합니다.
+본 프로젝트는 **FastAPI**를 기반으로 하며, AI Agent 로직과 API 서버가 통합된 구조입니다.
 
 ### Naming Convention
 * **Directory:** `snake_case` (e.g., `src`, `tech_npc_agent`)
