@@ -3,7 +3,13 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import uuid
 import random
+import os
+import sys
 from datetime import datetime, timedelta
+
+# 서비스 임포트
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from services.seeker_file_upload_service import process_file_upload
 
 app = FastAPI(title="ReNe Project Mock API", version="1.0.0")
 
@@ -149,9 +155,40 @@ async def seeker_lobby_load(payload: Dict[str, str]):
 async def seeker_file_upload(
     session_id: str = Form(...), file_type: str = Form(...), file: UploadFile = File(...)
 ):
-    fid = f"file_{uuid.uuid4()}"[:8]
-    files_db[fid] = {"name": file.filename, "owner": session_id}
-    return {"result_code": 200, "body": {"file_id": fid}}
+    """
+    구직자 파일 업로드 및 LLM 파싱
+    
+    - session_id: 세션 ID
+    - file_type: "resume" 또는 "portfolio"
+    - file: 업로드할 파일 (PDF, DOCX, TXT)
+    """
+    try:
+        # 세션에서 user_id 추출
+        uid = get_user_id(session_id)
+        
+        # 실제 파일 처리 (LLM 파싱)
+        result = await process_file_upload(
+            session_id = session_id,
+            file_type = file_type,
+            file = file,
+            user_id = uid
+        )
+        
+        # Mock DB에도 저장 (호환성 유지)
+        files_db[result["file_id"]] = {
+            "name": file.filename,
+            "owner": session_id,
+            "ncs_level": result["ncs_level"],
+            "rcs_level": result["rcs_level"],
+            "created_at": result["created_at"]
+        }
+        
+        return {"result_code": 200, "body": result}
+    
+    except HTTPException as he:
+        return {"result_code": he.status_code, "body": {"error": he.detail}}
+    except Exception as e:
+        return {"result_code": 500, "body": {"error": str(e)}}
 
 @app.post("/api/v1/seeker/history/completed", tags=["2. Seeker"])
 async def seeker_history_list(payload: Dict[str, Any]):
