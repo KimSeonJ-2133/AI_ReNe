@@ -14,7 +14,7 @@ class Jobseeker(Base):
     password = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=False)
     birthdate = Column(Date, nullable=False)
-    gender = Column(String((10), nullable=False)) # Female, Male
+    gender = Column(String(10), nullable=False) # Female, Male
     address = Column(String(255), nullable=False)
     verified_grade = Column(String(50), nullable=False) # NOT_VERIFIED, DOCS_VERIFIED, PERSONAL_VERIFIED,  ALL_VERIFIED
     policy_agree_bool = Column(Boolean, nullable=False, default=False)

@@ -1,5 +1,5 @@
 import os, sys
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, JSON, func, Text
+from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, JSON, func, Text, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import relationship
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
@@ -32,7 +32,7 @@ class BeginningReneDetail(Base):
     # 1:1 식별관계
     id = Column(Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True)
     occupational_skills = Column(JSON, nullable=False)
-    mbti = Column(String(10, nullable=False))
+    mbti = Column(String(10), nullable=False)
     recommended_jobs = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 

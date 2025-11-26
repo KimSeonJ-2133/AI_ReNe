@@ -2,8 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
-from config import settings
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+from core.config import settings
 
 # 엔진 생성 (echo=True로 하면 실행되는 SQL이 로그에 찍힘 - 디버깅용)
 engine = create_engine(
