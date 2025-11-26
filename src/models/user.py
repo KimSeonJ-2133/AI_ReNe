@@ -19,7 +19,7 @@ class Jobseeker(Base):
     verified_grade = Column(String(50), nullable=False) # NOT_VERIFIED, DOCS_VERIFIED, PERSONAL_VERIFIED,  ALL_VERIFIED
     policy_agree_bool = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
-    is_docs_submit = Column(String(20), nullable=True), # NONE, RESUME, PORTFOLIO, ALL
+    is_docs_submit = Column(String(20), nullable=True) # NONE, RESUME, PORTFOLIO, ALL
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # 관계 설정 (cascade 삭제 설정)
