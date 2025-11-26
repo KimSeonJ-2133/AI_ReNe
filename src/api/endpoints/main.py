@@ -260,10 +260,44 @@ async def company_info_load(payload: Dict[str, str]):
 
 @app.post("/api/v1/company/file/upload", tags=["3. Company"])
 async def company_file_upload(
-    session_id: str = Form(...), file_type: str = Form(...), file: UploadFile = File(...)
+    session_id: str = Form(...), 
+    file_type: str = Form(...), 
+    file: UploadFile = File(...),
+    user_id: Optional[str] = Form(None)
 ):
-    fid = f"comp_file_{uuid.uuid4()}"[:8]
-    return {"result_code": 200, "body": {"file_id": fid}}
+    """
+    기업 채용 공고 파일 업로드 및 JRS 파싱
+    
+    - **session_id**: 세션 ID
+    - **file_type**: 파일 유형 (jd, job_description 등)
+    - **file**: 업로드할 채용 공고 파일 (PDF/DOCX/TXT)
+    - **user_id**: 기업 사용자 ID (선택)
+    
+    Returns:
+        JRS(Job Requirement Specification) 포맷으로 파싱된 결과
+    """
+    try:
+        from src.services.company_file_upload_service import process_company_file_upload
+        
+        result = await process_company_file_upload(
+            session_id = session_id,
+            file_type = file_type,
+            file = file,
+            user_id = user_id
+        )
+        
+        return {
+            "result_code": 200, 
+            "body": {
+                "file_id": result["file_id"],
+                "min_rcs_level": result["min_rcs_level"],
+                "target_rcs_level": result["target_rcs_level"],
+                "jrs_markdown": result["jrs_markdown"],
+                "created_at": result["created_at"]
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code = 500, detail = str(e))
 
 @app.post("/api/v1/company/candidate/list", tags=["3. Company"])
 async def company_candidate_list(payload: Dict[str, Any]):
