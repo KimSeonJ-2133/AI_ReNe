@@ -5,11 +5,13 @@ from pathlib import Path
 current_path = Path(__file__).resolve()
 PROJECT_ROOT = current_path.parent.parent.parent
 
+
 class Settings(BaseSettings):
     """
     서비스의 환경 변수를 관리하는 설정 클래스
     .env 파일로부터 값을 자동으로 로드합니다.
     """
+
     OPENAI_API_KEY: str
 
     STT_PROVIDER: str = "naver"
@@ -20,7 +22,7 @@ class Settings(BaseSettings):
     LANGSMITH_ENDPOINT: str
     LANGSMITH_API_KEY: str
     LANGSMITH_PROJECT: str
-    
+
     # Naver Cloud Platform (NCP)
     NCP_CLIENT_ID: str
     NCP_SECRET_KEY: str
@@ -35,19 +37,20 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASSWORD: str
     DB_HOST: str
-    DB_PORT:int = 3306
+    DB_PORT: int = 3306
     DB_NAME: str
 
     @property
     def DATABASE_URL(self) -> str:
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-    
-    model_config = SettingsConfigDict(
 
-    env_file= PROJECT_ROOT / ".env",
-    env_file_encoding="utf-8",
-        extra="ignore"  # .env에 정의되지 않은 변수가 있어도 무시함 (에러 방지)
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # .env에 정의되지 않은 변수가 있어도 무시함 (에러 방지)
     )
+
+
 try:
     settings = Settings()
 except Exception as e:

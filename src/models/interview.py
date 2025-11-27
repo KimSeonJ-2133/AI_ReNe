@@ -1,16 +1,31 @@
 import os, sys
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, JSON, func, Text, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    Float,
+    String,
+    DateTime,
+    ForeignKey,
+    JSON,
+    func,
+    Text,
+    Boolean,
+)
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import relationship
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from core.database import Base
+
 
 # 1. 르네 인터뷰 (SuperType)
 class ReNeInterview(Base):
     __tablename__ = "rene_interview"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False) # 외래키
+    jobseeker_id = Column(
+        Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
+    )  # 외래키
     interview_type = Column(String(50), nullable=False)
     full_transcript = Column(LONGTEXT, nullable=False)
     summary = Column(LONGTEXT, nullable=False)
@@ -20,9 +35,24 @@ class ReNeInterview(Base):
     jobseeker = relationship("Jobseeker", back_populates="rene_interviews")
 
     # 1:1 매핑 관계 설정 (uselist=False)
-    beginning_rene_detail = relationship("BeginningReneDetail", back_populates="rene_interview", uselist=False, cascade="all, delete-orphan")
-    growth_rene_detail = relationship("GrowthReneDetail", back_populates="rene_interview", uselist=False, cascade="all, delete-orphan")
-    trials_rene_detail = relationship("TrialsReneDetail", back_populates="rene_interview", uselist=False, cascade="all, delete-orphan")
+    beginning_rene_detail = relationship(
+        "BeginningReneDetail",
+        back_populates="rene_interview",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    growth_rene_detail = relationship(
+        "GrowthReneDetail",
+        back_populates="rene_interview",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    trials_rene_detail = relationship(
+        "TrialsReneDetail",
+        back_populates="rene_interview",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 # 2. 시작의 르네 인터뷰 (SubType)
@@ -30,20 +60,26 @@ class BeginningReneDetail(Base):
     __tablename__ = "beginning_rene_detail"
 
     # 1:1 식별관계
-    id = Column(Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(
+        Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
+    )
     occupational_skills = Column(JSON, nullable=False)
     mbti = Column(String(10), nullable=False)
     recommended_jobs = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    rene_interview = relationship("ReneInterview", back_populates="beginning_rene_detail")
+    rene_interview = relationship(
+        "ReneInterview", back_populates="beginning_rene_detail"
+    )
 
 
 # 3. 성장의 르네 인터뷰 (SubType)
 class GrowthReneDetail(Base):
     __tablename__ = "growth_rene_detail"
 
-    id = Column(Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(
+        Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
+    )
     project_details = Column(JSON, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -54,10 +90,12 @@ class GrowthReneDetail(Base):
 class TrialsReneDetail(Base):
     __tablename__ = "trials_rene_detail"
 
-    id = Column(Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(
+        Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
+    )
     total_score = Column(Float, nullable=False)
     total_evaluation = Column(JSON, nullable=False)
-    ai_result = Column(String(20), nullable=False) # PASS, FAIL, HOLD
+    ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
     total_advice = Column(LONGTEXT, nullable=False)
@@ -71,8 +109,12 @@ class CompanyAIInterview(Base):
     __tablename__ = "company_ai_interview"
 
     id = Column(Integer, primary_key=True, index=True)
-    jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
-    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
+    jobseeker_id = Column(
+        Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
+    )
+    job_group_id = Column(
+        Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
+    )
     full_transcript = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)
@@ -93,8 +135,12 @@ class NonContactInterview(Base):
     __tablename__ = "non_contact_interview"
 
     id = Column(Integer, primary_key=True, index=True)
-    jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
-    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
+    jobseeker_id = Column(
+        Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
+    )
+    job_group_id = Column(
+        Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
+    )
     start_time = Column(DateTime, nullable=False)
     is_end = Column(Boolean, default=False, nullable=False)
     full_transcript = Column(LONGTEXT, nullable=True)
@@ -109,3 +155,58 @@ class NonContactInterview(Base):
 
     jobseeker = relationship("Jobseeker", back_populates="non_contact_interviews")
     job_group = relationship("JobGroup", back_populates="non_contact_interviews")
+
+
+# 면접 세션 (진행 상태 관리)
+class InterviewSession(Base):
+    """
+    면접 진행 중 상태를 저장하는 테이블.
+    면접이 종료되면 이 데이터를 가공하여 위 'ReNeInterview' 등의 결과 테이블로 이관합니다.
+    """
+
+    __tablename__ = "interview_sessions"
+
+    session_id = Column(String(50), primary_key=True)  # UUID
+    user_id = Column(Integer, index=True)  # jobseeker_id와 매핑
+
+    stage = Column(String(20))  # BEGINNING, GROWTH, TRIAL, CORPORATE
+    current_mode = Column(
+        String(10), default="MID"
+    )  # LOW, MID, HIGH (엘리베이터 알고리즘)
+    turn_count = Column(Integer, default=0)  # 현재 턴 수 (최대 10회 제한용)
+
+    # 평가 데이터 (실시간 업데이트)
+    current_rcs_level = Column(Integer, default=0)
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    # 1:N 관계 (대화 로그)
+    logs = relationship(
+        "ChatLog", back_populates="session", cascade="all, delete-orphan"
+    )
+
+
+# 대화 로그 (컨테스트 관리)
+class ChatLog(Base):
+    """
+    각 턴(Turn)별 대화 내용과 평가 결과를 저장하는 테이블.
+    최근 2개의 대화를 불러와 LLM Context에 주입하는 용도로 사용합니다.
+    """
+
+    __tablename__ = "chat_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(50), ForeignKey("interview_sessions.session_id"))
+    turn_number = Column(Integer)
+
+    user_text = Column(Text)  # STT 결과
+    ai_text = Column(Text)  # 생성된 답변
+
+    # 그 턴의 평가 결과 (Evaluator Output)
+    eval_score = Column(Integer)
+    eval_action = Column(String(20))  # LEVEL_UP, STAY, LEVEL_DOWN
+
+    created_at = Column(DateTime, server_default=func.now())
+
+    session = relationship("InterviewSession", back_populates="logs")
