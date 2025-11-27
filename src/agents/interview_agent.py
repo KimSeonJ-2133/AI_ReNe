@@ -24,7 +24,7 @@ class InterviewAgent:
             openai_api_key=settings.OPENAI_API_KEY,
         )
         self.json_llm = ChatOpenAI(
-            model="gpt-4o", temperature=0.1, response_format={"type": "json_object"}
+            model="gpt-4o", temperature=0.1, model_kwargs={"response_format": {"type": "json_object"}}
         )
 
     def _load_prompt(self, filename: str) -> str:
@@ -52,7 +52,8 @@ class InterviewAgent:
         )
 
         # JSON 모드로 호출
-        response = await self.json_llm.ainvoke([SystemMessage(content=system_prompt)])
+        response = await self.json_llm.ainvoke([SystemMessage(content=system_content)])
+        
         return json.loads(response.content)
 
     async def generate_reply(

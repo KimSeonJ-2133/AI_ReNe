@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     STT_PROVIDER: str = "naver"
     TTS_PROVIDER: str = "naver"
 
-    OPENAI_API_KEY: str
     LANGSMITH_TRACING: bool
     LANGSMITH_ENDPOINT: str
     LANGSMITH_API_KEY: str

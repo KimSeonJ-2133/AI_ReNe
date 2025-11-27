@@ -157,7 +157,7 @@ class NonContactInterview(Base):
     job_group = relationship("JobGroup", back_populates="non_contact_interviews")
 
 
-# 면접 세션 (진행 상태 관리)
+# 7. 면접 세션 (진행 상태 관리)
 class InterviewSession(Base):
     """
     면접 진행 중 상태를 저장하는 테이블.
@@ -187,7 +187,7 @@ class InterviewSession(Base):
     )
 
 
-# 대화 로그 (컨테스트 관리)
+# 8. 대화 로그 (컨테스트 관리)
 class ChatLog(Base):
     """
     각 턴(Turn)별 대화 내용과 평가 결과를 저장하는 테이블.
