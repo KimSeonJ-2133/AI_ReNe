@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from utils.file_storage_utils import save_uploaded_file
 from agents.tools.file_text_extractor import extract_text_from_file, get_text_preview
 from agents.seeker_file_upload_agent import parse_resume_with_llm, validate_parsing_result
-from schemas.seeker_file_upload_schemas import FileUploadResponse
+from schemas.jobseeker_schemas.seeker_file_upload_schemas import FileUploadResponse
 
 
 async def process_file_upload(
