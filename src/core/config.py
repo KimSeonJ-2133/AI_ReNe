@@ -1,4 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from pathlib import Path
+
+current_path = Path(__file__).resolve()
+PROJECT_ROOT = current_path.parent.parent.parent
 
 class Settings(BaseSettings):
     """
@@ -38,8 +43,9 @@ class Settings(BaseSettings):
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
+
+    env_file= PROJECT_ROOT / ".env",
+    env_file_encoding="utf-8",
         extra="ignore"  # .env에 정의되지 않은 변수가 있어도 무시함 (에러 방지)
     )
 try:

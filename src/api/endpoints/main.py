@@ -6,12 +6,23 @@ import random
 import os
 import sys
 from datetime import datetime, timedelta
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from core.database import engine, Base
+import models
+import uvicorn
 
 # 서비스 임포트
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from services.seeker_file_upload_service import process_file_upload
 
 app = FastAPI(title="ReNe Project Mock API", version="1.0.0")
+
+def init_db():
+    print("DB 초기화 스크립트 실행...")
+    Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
+    Base.metadata.create_all(bind=engine) # DB 생성
+    print("모든 테이블이 생성되었습니다.")
 
 # ==========================================
 # 💾 Stateful Mock DB (메모리 저장소)
@@ -483,3 +494,9 @@ async def p2p_analysis_status(payload: Dict[str, str]):
 async def p2p_analysis_retry(payload: Dict[str, str]):
     analysis_status_db[payload['schedule_id']] = "processing"
     return {"result_code": 200, "body": {"status": "processing"}}
+
+
+if __name__ == "__main__":
+    init_db()
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
