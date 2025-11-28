@@ -3,6 +3,7 @@
 venv/
 env/
 *.env
+uv.lock
 
 # 2. 민감한 정보
 .env
