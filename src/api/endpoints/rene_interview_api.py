@@ -5,14 +5,14 @@ import base64
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from services.stt_service.whisper_large_stt_service import stt_service
 from services.tts_service.elevenlabs_tts_service import tts_service
-from schemas.beginning_rene_schemas.beginning_rene_response_dto import BeginningReneChatResponse, BeginningReneChatData
+from schemas.beginning_rene_schemas.beginning_rene_response_dto import BeginningReneChatResponseDTO, BeginningReneChatData
 from agents.chat_agent import get_chat_response
 from dotenv import load_dotenv
 load_dotenv()
 
 router = APIRouter()
 
-@router.post("/rene/begin/voice-chat", response_model=BeginningReneChatResponse)
+@router.post("/rene/begin/voice-chat", response_model=BeginningReneChatResponseDTO)
 async def voice_chat(file: UploadFile = File(...)):
     """
     음성 파일(Blob)을 받아 STT 모델로 Text로 변환후 LLM을 거쳐 텍스트 응답을 프론트로 반환
@@ -43,7 +43,7 @@ async def voice_chat(file: UploadFile = File(...)):
         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
         data = BeginningReneChatData(user_text=transcribed_text, ai_response=response, audio_base64=audio_base64)
-        return BeginningReneChatResponse(
+        return BeginningReneChatResponseDTO(
             status_code=200,
             message= "200 OK, 음성 채팅에 성공하였습니다.",
             data=data
