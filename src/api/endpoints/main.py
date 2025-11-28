@@ -34,7 +34,7 @@ def init_db():
 
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
 
-# /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줍니다. (css, js 등)
+# /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줌. (css, js 등)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # 루트 경로('/') 접속 시 index.html 파일을 반환

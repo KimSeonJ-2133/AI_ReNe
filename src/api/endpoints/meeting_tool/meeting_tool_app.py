@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 import os, sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 from services.meeting_tool_service.meeting_tool_service import process_mentoring, process_team_meeting
 
 app = FastAPI(title="Meeting Log Automation API")
@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../static")
 
 # /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줍니다. (css, js 등)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
@@ -35,7 +35,7 @@ async def upload_team_meeting(file: UploadFile = File(...)):
     [팀 회의록] .txt 파일을 업로드하면 요약 후 형식을 정리 해 구글 시트에 저장합니다.
     """
     if not file.filename.endswith(".txt"):
-        raise HTTPException(status_code=400, detail="Only .txt files are allowed.")
+        raise HTTPException(status_code=400, detail=".txt 파일만 업로드 가능합니다.")
     
     try:
         content_bytes = await file.read()
@@ -58,7 +58,7 @@ async def upload_mentoring(file: UploadFile = File(...)):
     [멘토링 회의록] .txt 파일을 업로드하면 요약 후 형식을 정리 해 구글 시트에 저장합니다
     """
     if not file.filename.endswith(".txt"):
-        raise HTTPException(status_code=400, detail="Only .txt files are allowed.")
+        raise HTTPException(status_code=400, detail=".txt 파일만 업로드 가능합니다.")
     
     try:
         content_bytes = await file.read()
