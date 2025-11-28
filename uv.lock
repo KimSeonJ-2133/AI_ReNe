@@ -2624,8 +2624,15 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "pdfplumber" },
+<<<<<<< HEAD
     { name = "pydantic" },
     { name = "pydantic-settings" },
+=======
+<<<<<<< HEAD
+    { name = "pydantic-settings" },
+=======
+>>>>>>> develop
+>>>>>>> develop
     { name = "pymysql" },
     { name = "pypdf2" },
     { name = "pytest" },
@@ -2646,8 +2653,11 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.43.0" },
     { name = "gspread", specifier = ">=6.2.1" },
     { name = "httpx", specifier = ">=0.27.0" },
+<<<<<<< HEAD
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "huggingface-hub", specifier = ">=0.36.0" },
+=======
+>>>>>>> develop
     { name = "ipykernel", specifier = ">=7.1.0" },
     { name = "langchain", specifier = ">=1.0.5" },
     { name = "langchain-core", specifier = ">=1.0.4" },
@@ -2658,7 +2668,10 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.4" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pdfplumber", specifier = ">=0.11.0" },
+<<<<<<< HEAD
     { name = "pydantic", specifier = ">=2.12.4" },
+=======
+>>>>>>> develop
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pymysql", specifier = ">=1.1.2" },
     { name = "pypdf2", specifier = ">=3.0.0" },
