@@ -16,7 +16,7 @@ from src.core.database import engine, Base
 import src.models.interview
 
 # 서비스 로직 임포트
-from src.services.interview_service import process_interview_turn
+from src.services.interview_service.interview_service import process_interview_turn
 
 # [Setup] FastAPI 앱 초기화
 # -----

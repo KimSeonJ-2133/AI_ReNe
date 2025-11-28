@@ -2,8 +2,9 @@
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
-from agents.interview_agent import interview_agent
-from models.interview import InterviewSession, ChatLog
+from src.agents.interview_agent import interview_agent
+from src.models.interview import ReNeInterview  # InterviewSession -> ReNeInterview
+# from src.models.interview import ChatLog # [가상 모델] 현재 없음
 
 # STT 모듈 임포트
 # TTS 모튤 임포트
@@ -16,7 +17,9 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
     면접 1턴(Turn) 처리 프로세스: Audio -> STT -> Brain -> TTS -> Audio
     """
     # 세션 정보 로드
-    session = db.query(InterviewSession).filter_by(session_id=session_id).first()
+    # session = db.query(ReNeInterview).filter_by(id=int(session_id)).first() # ID가 int라고 가정
+    session = None # DB 연동 전이라 None 처리
+    
     if not session:
         # 세션이 없으면 새로 생성 (로직 생략)
         pass
@@ -26,9 +29,11 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
     user_text = "임시 테스트 텍스트입니다."  # Mock
 
     # [Evaluator] 평가
-    context_type = "SKILL_CHECK" if session.stage == "GROWTH" else "INFO_GATHERING"
+    # context_type = "SKILL_CHECK" if session.stage == "GROWTH" else "INFO_GATHERING"
+    context_type = "SKILL_CHECK" # Mock
 
     # 직접 질문 가져오기 (DB에서 조회)
+    """
     last_log = (
         db.query(ChatLog)
         .filter_by(session_id=session_id)
@@ -36,6 +41,8 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
         .first()
     )
     last_question = last_log.ai_text if last_log else "첫 질문입니다."
+    """
+    last_question = "첫 질문입니다." # Mock
 
     eval_result = await interview_agent.run_evaluator(
         context_type=context_type, question=last_question, answer=user_text
@@ -43,6 +50,7 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
 
     # [Logic] 모드 변경 및 DB 업데이트
     action = eval_result.get("action")
+    """
     if action == "LEVEL_UP":
         if session.current_mode == "MID":
             session.current_mode = "HIGH"
@@ -53,13 +61,14 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
             session.current_mode = "LOW"
         elif session.current_mode == "HIGH":
             session.current_mode = "MID"
+    """
 
     # [Persona] 답변 생성
     persona_file = "ReNe of Growth.md"  # 로직에 따라 파일 선택
 
     # 프롬프트 변수 준비
     input_vars = {
-        "current_mode": session.current_mode,
+        "current_mode": "MID", # session.current_mode,
         "resume_summary": "DB에서 로드한 요약...",
         "previous_user_answer": user_text,  # High 모드
     }
@@ -71,7 +80,8 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
         chat_history=[],  # 필요 시 DB에서 최근 2개 로드해서 주입
     )
 
-    # [DB] 대화 로그 저장
+    # [DB] 대화 로그 저장 (현재 DB 스키마와 불일치하여 주석 처리)
+    """
     new_log = ChatLog(
         session_id=session_id,
         user_text=user_text,
@@ -81,12 +91,13 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
     )
     db.add(new_log)
     db.commit()
+    """
 
     # [TTS] 음성 변환 및 리턴
     # audio_data= await generate(npc_text)
 
     return {
         "npc_text": npc_text,
-        "current_mode": session.current_mode,
+        "current_mode": "MID", # session.current_mode,
         "action": action,
     }

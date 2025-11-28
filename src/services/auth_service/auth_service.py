@@ -6,13 +6,15 @@ from src.repositories.company_repository import CompanyRepository
 from src.models.user import Jobseeker, Company
 from src.schemas.jobseeker_schemas.jobseeker_request_dto import JobseekerSignupRequestDto, JobseekerLoginRequestDto
 from src.schemas.company_schemas.company_request_dto import CompanySignupRequestDto, CompanyLoginRequestDto
+from src.schemas.jobseeker_schemas.jobseeker_response_dto import JobseekerSignupResponseDto, JobseekerLoginResponseDto
+from src.schemas.company_schemas.company_response_dto import CompanySignupResponseDto, CompanyLoginResponseDto
 
 class AuthService:
     def __init__(self, db: Session):
         self.jobseeker_repo = JobseekerRepository(db)
         self.company_repo = CompanyRepository(db)
 
-    def signup_jobseeker(self, request: JobseekerSignupRequestDto) -> Jobseeker:
+    def signup_jobseeker(self, request: JobseekerSignupRequestDto) -> JobseekerSignupResponseDto:
         # 이메일 중복 확인
         if self.jobseeker_repo.get_by_email(request.email):
             raise HTTPException(
@@ -34,9 +36,15 @@ class AuthService:
             is_docs_submit="NONE"          # 기본값 설정
         )
         
-        return self.jobseeker_repo.create(new_jobseeker)
+        created_user = self.jobseeker_repo.create(new_jobseeker)
+        
+        return JobseekerSignupResponseDto(
+            message="회원가입이 완료되었습니다.",
+            user_id=created_user.id,
+            email=created_user.email
+        )
 
-    def login_jobseeker(self, request: JobseekerLoginRequestDto) -> Jobseeker:
+    def login_jobseeker(self, request: JobseekerLoginRequestDto) -> JobseekerLoginResponseDto:
         user = self.jobseeker_repo.get_by_email(request.email)
         
         # 인증 (프로토타입: 평문 비교)
@@ -45,9 +53,15 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="이메일 또는 비밀번호가 올바르지 않습니다."
             )
-        return user
+            
+        return JobseekerLoginResponseDto(
+            message="로그인 성공",
+            user_id=user.id,
+            name=user.name,
+            email=user.email
+        )
 
-    def signup_company(self, request: CompanySignupRequestDto) -> Company:
+    def signup_company(self, request: CompanySignupRequestDto) -> CompanySignupResponseDto:
         # 이메일 중복 확인
         if self.company_repo.get_by_email(request.email):
             raise HTTPException(
@@ -66,9 +80,15 @@ class AuthService:
             policy_agree_bool=request.policy_agree_bool
         )
         
-        return self.company_repo.create(new_company)
+        created_company = self.company_repo.create(new_company)
+        
+        return CompanySignupResponseDto(
+            message="기업 회원가입이 완료되었습니다.",
+            company_id=created_company.id,
+            email=created_company.email
+        )
 
-    def login_company(self, request: CompanyLoginRequestDto) -> Company:
+    def login_company(self, request: CompanyLoginRequestDto) -> CompanyLoginResponseDto:
         company = self.company_repo.get_by_email(request.email)
         
         # 인증 (프로토타입: 평문 비교)
@@ -77,4 +97,10 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="이메일 또는 비밀번호가 올바르지 않습니다."
             )
-        return company
+            
+        return CompanyLoginResponseDto(
+            message="로그인 성공",
+            company_id=company.id,
+            name=company.name,
+            email=company.email
+        )
