@@ -38,3 +38,4 @@ dist/
 
 # 9. 모델
 data/models/
+data/datasets/audio/

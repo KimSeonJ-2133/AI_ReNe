@@ -6,7 +6,7 @@ import uvicorn
 import os, sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from src.services.meeting_tool_service.meeting_tool_service import process_mentoring, process_team_meeting
+from services.meeting_tool_service.meeting_tool_service import process_mentoring, process_team_meeting
 
 app = FastAPI(title="Meeting Log Automation API")
 
