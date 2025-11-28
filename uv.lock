@@ -2066,7 +2066,10 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "pdfplumber" },
+<<<<<<< HEAD
     { name = "pydantic-settings" },
+=======
+>>>>>>> develop
     { name = "pymysql" },
     { name = "pypdf2" },
     { name = "pytest" },
