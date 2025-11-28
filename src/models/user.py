@@ -58,5 +58,5 @@ class JobGroup(Base):
     # 관계 설정(cascade 삭제 설정)
     company = relationship("Company", back_populates="job_groups")
     company_ai_interviews = relationship("CompanyAIInterview", back_populates="job_group", cascade="all, delete-orphan")
-    non_concat_interviews = relationship("NonContactInterview", back_populates="job_group", cascade="all, delete-orphann")
+    non_concat_interviews = relationship("NonContactInterview", back_populates="job_group", cascade="all, delete-orphan")
     vector_mappings = relationship("JobGroupVectorMapping", back_populates="job_group", cascade="all, delete-orphan")
