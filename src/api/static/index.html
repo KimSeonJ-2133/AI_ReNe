@@ -2,224 +2,145 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📑회의록 자동화 시스템</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Voice Agent Test</title>
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; }
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #3b82f6;
-            width: 24px;
-            height: 24px;
-            -webkit-animation: spin 1s linear infinite; /* Safari */
-            animation: spin 1s linear infinite;
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; margin: 10px; }
+        #status { margin-top: 20px; color: gray; font-weight: bold; }
+        .box { border: 1px solid #ddd; padding: 20px; margin: 20px auto; max-width: 600px; border-radius: 8px; background-color: #f9f9f9; }
+        .result-box { text-align: left; background-color: white; }
+        
+        /* 시간 표시용 스타일 추가 */
+        .time-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+            background: #eef;
+            padding: 10px;
+            border-radius: 5px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .time-val { font-weight: bold; color: #d63384; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
-
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
-        <!-- Header -->
-        <div class="bg-blue-600 p-6 text-center">
-            <h1 class="text-white text-xl font-bold">회의록 AI 자동화</h1>
-            <p class="text-blue-100 text-sm mt-1">TXT 파일을 시트로 변환합니다</p>
-        </div>
-
-        <!-- Tabs -->
-        <div class="flex border-b border-gray-200">
-            <button onclick="switchTab('team')" id="tab-team" class="flex-1 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 transition-colors">
-                팀 회의
-            </button>
-            <button onclick="switchTab('mentoring')" id="tab-mentoring" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-blue-500 transition-colors">
-                멘토링
-            </button>
-        </div>
-
-        <!-- Content Area -->
-        <div class="p-6">
-            
-            <!-- Team Meeting Form -->
-            <div id="form-team" class="block">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">팀 회의록 파일 (.txt)</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="file-team" class="flex flex-col items-center justify-center w-full h-32 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-3 text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                </svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">클릭하여 업로드</span></p>
-                                <p class="text-xs text-gray-500" id="filename-team">TXT 파일만 가능</p>
-                            </div>
-                            <input id="file-team" type="file" accept=".txt" class="hidden" onchange="updateFileName('team')" />
-                        </label>
-                    </div>
-                </div>
-                <button onclick="uploadFile('team')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center shadow-md hover:shadow-lg">
-                    <span id="btn-text-team">팀 회의록 변환하기</span>
-                    <div id="spinner-team" class="loader ml-2 hidden"></div>
-                </button>
-            </div>
-
-            <!-- Mentoring Form -->
-            <div id="form-mentoring" class="hidden">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">멘토링 회의록 파일 (.txt)</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="file-mentoring" class="flex flex-col items-center justify-center w-full h-32 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-green-50 hover:bg-green-100 transition">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-3 text-green-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                </svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">클릭하여 업로드</span></p>
-                                <p class="text-xs text-gray-500" id="filename-mentoring">TXT 파일만 가능</p>
-                            </div>
-                            <input id="file-mentoring" type="file" accept=".txt" class="hidden" onchange="updateFileName('mentoring')" />
-                        </label>
-                    </div>
-                </div>
-                <button onclick="uploadFile('mentoring')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center shadow-md hover:shadow-lg">
-                    <span id="btn-text-mentoring">멘토링 회의록 변환하기</span>
-                    <div id="spinner-mentoring" class="loader ml-2 hidden"></div>
-                </button>
-            </div>
-
-            <!-- Result Area -->
-            <div id="result-area" class="mt-6 hidden animate-fade-in">
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
-                    <p class="font-bold">변환 성공!</p>
-                    <p class="text-sm">구글 시트에 내용이 추가되었습니다.</p>
-                    <a id="sheet-link" href="#" target="_blank" class="mt-3 inline-block bg-white text-green-700 font-semibold py-2 px-4 border border-green-500 rounded hover:bg-green-50 text-sm">
-                        📊 구글 시트 열기
-                    </a>
-                </div>
-            </div>
-
-            <div id="error-area" class="mt-6 hidden">
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert">
-                    <p class="font-bold">오류 발생</p>
-                    <p class="text-sm" id="error-msg">파일 처리 중 문제가 발생했습니다.</p>
-                </div>
-            </div>
-
-        </div>
+<body>
+    <h1>🎙️ AI 음성 에이전트 테스트</h1>
+    
+    <div class="box">
+        <button id="recordBtn">🔴 녹음 시작</button>
+        <button id="stopBtn" disabled>⬛ 녹음 종료 및 전송</button>
+        <p id="status">대기 중...</p>
         
-        <div class="bg-gray-50 p-4 text-center text-xs text-gray-400">
-            Powered by FastAPI & OpenAI
+        <div class="time-info">
+            <span>⏱️ 녹음 시간: <span id="recordTime" class="time-val">0.00</span>초</span>
+            <span>⚡ 응답 소요 시간: <span id="responseTime" class="time-val">-</span>초</span>
         </div>
     </div>
 
+    <div class="box result-box">
+        <p><strong>🗣️ 내 질문:</strong> <span id="userText" style="color: #333;"></span></p>
+        <hr>
+        <p><strong>🤖 AI 응답:</strong> <span id="aiText" style="color: #0056b3;"></span></p>
+    </div>
+
     <script>
-        // Configuration
-        const API_BASE_URL = "http://localhost:8080"; // 백엔드 주소가 다르면 여기서 수정하세요
+        let mediaRecorder;
+        let audioChunks = [];
+        
+        // 시간 측정을 위한 변수
+        let startRecordTime; // 녹음 시작 시각
+        let startProcessTime; // 서버 전송 시작 시각
 
-        function switchTab(tab) {
-            const teamForm = document.getElementById('form-team');
-            const mentoringForm = document.getElementById('form-mentoring');
-            const teamTab = document.getElementById('tab-team');
-            const mentoringTab = document.getElementById('tab-mentoring');
-            
-            // Reset UI
-            document.getElementById('result-area').classList.add('hidden');
-            document.getElementById('error-area').classList.add('hidden');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const userText = document.getElementById('userText');
+        const aiText = document.getElementById('aiText');
+        
+        const recordTimeDisplay = document.getElementById('recordTime');
+        const responseTimeDisplay = document.getElementById('responseTime');
 
-            if (tab === 'team') {
-                teamForm.classList.remove('hidden');
-                mentoringForm.classList.add('hidden');
+        recordBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
                 
-                teamTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                teamTab.classList.remove('text-gray-500');
-                mentoringTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                mentoringTab.classList.add('text-gray-500');
-            } else {
-                teamForm.classList.add('hidden');
-                mentoringForm.classList.remove('hidden');
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                
+                mediaRecorder.onstop = async () => {
+                    // 1. 녹음 종료 시점 계산
+                    const recordDuration = (Date.now() - startRecordTime) / 1000;
+                    recordTimeDisplay.innerText = recordDuration.toFixed(2); // 소수점 2자리까지 표시
 
-                mentoringTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                mentoringTab.classList.remove('text-gray-500');
-                teamTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                teamTab.classList.add('text-gray-500');
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
+                    sendAudio(audioBlob);
+                    audioChunks = []; 
+                };
+
+                mediaRecorder.start();
+                
+                // 2. 녹음 시작 시간 기록
+                startRecordTime = Date.now();
+                
+                recordBtn.disabled = true;
+                stopBtn.disabled = false;
+                status.innerText = "녹음 중... (말씀하세요)";
+                status.style.color = "red";
+                
+                // UI 초기화
+                userText.innerText = "";
+                aiText.innerText = "";
+                responseTimeDisplay.innerText = "-"; // 응답 시간 초기화
+
+            } catch (err) {
+                console.error("마이크 접근 실패:", err);
+                status.innerText = "마이크 권한이 필요합니다.";
             }
-        }
+        };
 
-        function updateFileName(type) {
-            const input = document.getElementById(`file-${type}`);
-            const nameDisplay = document.getElementById(`filename-${type}`);
-            if (input.files && input.files.length > 0) {
-                nameDisplay.textContent = input.files[0].name;
-                nameDisplay.classList.add('text-blue-600', 'font-bold');
-            } else {
-                nameDisplay.textContent = "TXT 파일만 가능";
-                nameDisplay.classList.remove('text-blue-600', 'font-bold');
-            }
-        }
+        stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.innerText = "처리 중... (잠시만 기다려주세요)";
+            status.style.color = "blue";
+        };
 
-        async function uploadFile(type) {
-            const input = document.getElementById(`file-${type}`);
-            const file = input.files[0];
-            
-            // UI Elements
-            const spinner = document.getElementById(`spinner-${type}`);
-            const btnText = document.getElementById(`btn-text-${type}`);
-            const resultArea = document.getElementById('result-area');
-            const errorArea = document.getElementById('error-area');
-            const errorMsg = document.getElementById('error-msg');
-            const sheetLink = document.getElementById('sheet-link');
-
-            // Reset Status
-            resultArea.classList.add('hidden');
-            errorArea.classList.add('hidden');
-
-            if (!file) {
-                alert("파일을 선택해주세요!");
-                return;
-            }
-
-            // Loading State
-            spinner.classList.remove('hidden');
-            btnText.textContent = "처리 중...";
-            
+        async function sendAudio(blob) {
             const formData = new FormData();
-            formData.append("file", file);
-
-            // Determine Endpoint
-            const endpoint = type === 'team' ? '/upload/team-meeting' : '/upload/mentoring';
+            formData.append("file", blob, "recording.webm");
 
             try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                // 3. 서버 요청 시작 시간 기록
+                startProcessTime = Date.now();
+
+                const response = await fetch('/api/v1/rene/begin/voice-chat', {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 const result = await response.json();
 
+                // 4. 응답 도착 후 시간 계산
+                const processDuration = (Date.now() - startProcessTime) / 1000;
+                responseTimeDisplay.innerText = processDuration.toFixed(2); // 결과 표시
+
                 if (response.ok) {
-                    // Success
-                    resultArea.classList.remove('hidden');
-                    if (result.link) {
-                        sheetLink.href = result.link;
-                    } else {
-                        sheetLink.style.display = 'none';
-                    }
+                    userText.innerText = result.data.user_text;
+                    aiText.innerText = result.data.ai_response;
+                    status.innerText = "완료! (" + result.message + ")";
+                    status.style.color = "green";
                 } else {
-                    // Error from Server
-                    throw new Error(result.detail || "서버 처리 중 오류 발생");
+                    console.error("Server Error:", result);
+                    status.innerText = "서버 에러: " + (result.detail || result.message || "알 수 없는 오류");
+                    status.style.color = "red";
                 }
+
             } catch (error) {
-                console.error(error);
-                errorArea.classList.remove('hidden');
-                errorMsg.textContent = error.message || "네트워크 오류가 발생했습니다.";
-            } finally {
-                // Reset Button
-                spinner.classList.add('hidden');
-                btnText.textContent = type === 'team' ? "팀 회의록 변환하기" : "멘토링 회의록 변환하기";
+                console.error("Network Error:", error);
+                status.innerText = "네트워크 통신 오류 발생!";
+                status.style.color = "red";
             }
         }
     </script>

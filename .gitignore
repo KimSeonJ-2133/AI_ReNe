@@ -36,3 +36,7 @@ dist/
 
 # 8. 로그
 *.log
+
+# 9. 모델
+data/models/
+data/datasets/audio/

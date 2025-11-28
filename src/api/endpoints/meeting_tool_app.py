@@ -6,7 +6,7 @@ import uvicorn
 import os, sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from services.meeting_tool_service import process_mentoring, process_team_meeting
+from services.meeting_tool_service.meeting_tool_service import process_mentoring, process_team_meeting
 
 app = FastAPI(title="Meeting Log Automation API")
 
@@ -27,7 +27,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 @app.get("/")
 async def read_root():
     # FileResponse(파일경로) 형태로 작성
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return FileResponse(os.path.join(static_dir, "meeting_tool_index.html"))
 
 @app.post("/upload/team-meeting")
 async def upload_team_meeting(file: UploadFile = File(...)):
@@ -76,5 +76,5 @@ async def upload_mentoring(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run("meeting_tool_api:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("meeting_tool_app:app", host="0.0.0.0", port=8080, reload=True)
 

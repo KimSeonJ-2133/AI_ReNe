@@ -4,6 +4,8 @@ from pathlib import Path
 
 current_path = Path(__file__).resolve()
 PROJECT_ROOT = current_path.parent.parent.parent
+WHISPER_KOREAN_MODEL_PATH_OBJ = PROJECT_ROOT / "data" / "models" / "whisper_large_v3_turbo_korean"
+WHISPER_LARGE_V3_MODEL_PATH_OBJ = PROJECT_ROOT / "data" / "models" / "whisper_large_v3"
 
 
 class Settings(BaseSettings):
@@ -38,6 +40,9 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int = 3306
     DB_NAME: str
+
+    WHISPER_KOREAN_MODEL_PATH: str = str(WHISPER_KOREAN_MODEL_PATH_OBJ)
+    WHISPER_LARGE_V3_MODEL_PATH: str = str(WHISPER_LARGE_V3_MODEL_PATH_OBJ)
 
     @property
     def DATABASE_URL(self) -> str:
