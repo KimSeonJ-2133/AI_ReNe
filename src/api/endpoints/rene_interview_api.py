@@ -10,9 +10,9 @@ from agents.chat_agent import get_chat_response
 from dotenv import load_dotenv
 load_dotenv()
 
-router = APIRouter()
+rene_router = APIRouter()
 
-@router.post("/rene/begin/voice-chat", response_model=BeginningReneChatResponseDTO)
+@rene_router.post("/rene/begin/voice-chat", response_model=BeginningReneChatResponseDTO)
 async def voice_chat(file: UploadFile = File(...)):
     """
     음성 파일(Blob)을 받아 STT 모델로 Text로 변환후 LLM을 거쳐 텍스트 응답을 프론트로 반환
