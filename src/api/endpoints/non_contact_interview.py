@@ -7,6 +7,11 @@ load_dotenv()
 
 router = APIRouter()
 
-@router.post("/non-contact/voice-chat")
+@router.post("/non-contact/voice-chat-save")
 async def voice_chat(file: UploadFile = File(...)):
     return None
+
+@router.post("/non-contact/report")
+async def report(user_id: int):
+    return None
+
