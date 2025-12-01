@@ -15,7 +15,6 @@ class WhisperLargeV3Service:
     OpenAI Whisper Large V3 전용 STT Service
     Singleton 패턴 적용
     """
-
     _instance = None # Singleton - 처음 한 번만 객체 생성
 
     def __new__(cls):
