@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 import os, sys
 import base64
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from services.stt_service.whisper_large_stt_service import stt_service
+from services.stt_service.faster_whisper_service import stt_service
 from services.tts_service.elevenlabs_tts_service import tts_service
 from schemas.beginning_rene_schemas.beginning_rene_response_dto import BeginningReneChatResponseDTO, BeginningReneChatData
 from agents.chat_agent import get_chat_response

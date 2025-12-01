@@ -37,4 +37,6 @@ dependencies = [
     "huggingface-hub>=0.36.0",
     "gtts>=2.5.4",
     "elevenlabs>=2.24.0",
+    "optimum>=2.0.0",
+    "faster-whisper>=1.2.1",
 ]

@@ -12,13 +12,13 @@ from src.schemas.company_schemas.company_request_dto import CompanySignupRequest
 from src.schemas.jobseeker_schemas.jobseeker_response_dto import JobseekerSignupResponseDto, JobseekerLoginResponseDto
 from src.schemas.company_schemas.company_response_dto import CompanySignupResponseDto, CompanyLoginResponseDto
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # ==========================================
 # 1. 구직자 (Jobseeker) 인증
 # ==========================================
 
-@router.post("/signup/jobseeker", status_code=status.HTTP_201_CREATED, response_model=JobseekerSignupResponseDto)
+@auth_router.post("/signup/jobseeker", status_code=status.HTTP_201_CREATED, response_model=JobseekerSignupResponseDto)
 def signup_jobseeker(
     request: JobseekerSignupRequestDto, 
     db: Session = Depends(get_db)
@@ -29,7 +29,7 @@ def signup_jobseeker(
     auth_service = AuthService(db)
     return auth_service.signup_jobseeker(request)
 
-@router.post("/login/jobseeker", response_model=JobseekerLoginResponseDto)
+@auth_router.post("/login/jobseeker", response_model=JobseekerLoginResponseDto)
 def login_jobseeker(
     request: JobseekerLoginRequestDto,
     db: Session = Depends(get_db)
@@ -45,7 +45,7 @@ def login_jobseeker(
 # 2. 기업 (Company) 인증
 # ==========================================
 
-@router.post("/signup/company", status_code=status.HTTP_201_CREATED, response_model=CompanySignupResponseDto)
+@auth_router.post("/signup/company", status_code=status.HTTP_201_CREATED, response_model=CompanySignupResponseDto)
 def signup_company(
     request: CompanySignupRequestDto,
     db: Session = Depends(get_db)
@@ -56,7 +56,7 @@ def signup_company(
     auth_service = AuthService(db)
     return auth_service.signup_company(request)
 
-@router.post("/login/company", response_model=CompanyLoginResponseDto)
+@auth_router.post("/login/company", response_model=CompanyLoginResponseDto)
 def login_company(
     request: CompanyLoginRequestDto,
     db: Session = Depends(get_db)

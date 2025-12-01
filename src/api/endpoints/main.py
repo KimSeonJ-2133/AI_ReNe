@@ -19,6 +19,7 @@ app = FastAPI(title="ReNe Project API", version="1.0.0")
 
 app.include_router(rene_router, prefix="/api/v1")
 app.include_router(non_contact_router, prefix="/api/v1")
+#app.include_router(auth_router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
