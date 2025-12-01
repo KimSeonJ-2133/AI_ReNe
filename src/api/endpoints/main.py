@@ -7,7 +7,8 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.database import engine, Base
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
-from rene_interview_api import router
+from rene_interview_api import rene_router
+from non_contact_interview import non_contact_router
 import models
 import uvicorn
 from fastapi.staticfiles import StaticFiles
@@ -16,7 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="ReNe Project API", version="1.0.0")
 
-app.include_router(router, prefix="/api/v1")
+app.include_router(rene_router, prefix="/api/v1")
+app.include_router(non_contact_router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,13 +30,13 @@ app.add_middleware(
 
 def init_db():
     print("DB 초기화 스크립트 실행...")
-    Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
+    #Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
     Base.metadata.create_all(bind=engine) # DB 생성
     print("모든 테이블이 생성되었습니다.")
 
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
 
-# /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줍니다. (css, js 등)
+# /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줌. (css, js 등)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # 루트 경로('/') 접속 시 index.html 파일을 반환

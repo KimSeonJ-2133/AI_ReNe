@@ -41,8 +41,12 @@ class Settings(BaseSettings):
     DB_PORT: int = 3306
     DB_NAME: str
 
+    # Whisper
     WHISPER_KOREAN_MODEL_PATH: str = str(WHISPER_KOREAN_MODEL_PATH_OBJ)
     WHISPER_LARGE_V3_MODEL_PATH: str = str(WHISPER_LARGE_V3_MODEL_PATH_OBJ)
+
+    # ElevenLabs
+    ELEVENLABS_API_KEY: str
 
     @property
     def DATABASE_URL(self) -> str:
