@@ -33,8 +33,8 @@ class Portfolio(Base):
     jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
     main_skills = Column(JSON, nullable=True)
     project_details = Column(JSON, nullable=False) # 최신 5개
-    ncs_level = Column(String(50), nullable=False) # NCS 수준체계 1~8 단계
-    rcs_level = Column(String(50), nullable=False) # RCS 수준체계 1~8 단계
+    ncs_level = Column(Integer, nullable=False) # NCS 수준체계 1~8 단계
+    rcs_level = Column(Integer, nullable=False) # RCS 수준체계 1~8 단계
     markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -55,7 +55,7 @@ class RecruitmentNotice(Base):
     __tablename__ = "recruitment_notice"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE", nullable=False))
+    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
     markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
