@@ -1,2 +1,112 @@
 #모듈 정의 : 최적화된 Whisper 모델 기반 초고속 STT 기능 제공 - Service Module
 #연결 모듈 : src/services/interview_service/interview_service.py (Service)
+
+import torch
+from transformers import pipeline
+import librosa
+import os, sys
+import tempfile
+import numpy as np
+from dotenv import load_dotenv
+load_dotenv()
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from core.config import settings
+
+class InsanelyFastWhisperService:
+    """
+    OpenAI Whisper Large V3 + Optimum BetterTransformer 모델 전용 STT Service
+    Singleton 패턴 적용
+    """
+    _instance = None # Singleton - 처음 한 번만 객체 생성
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(InsanelyFastWhisperService, cls).__new__(cls) # STTService 객체 생성
+            cls._instance.initialize_model() # 모델 로딩 함수 실행
+        return cls._instance
+
+    # STT 모델 로딩 함수
+    def initialize_model(self):
+        print("Insanely Fast WhisperService 모델 초기화 중...")
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+        try:
+            # huggingface의 복잡한 모델 사용 과정을 pipeline으로 자동화 (전처리(tensor로 변환) - 모델 추론 - 후처리(decoding))
+            self.pipe = pipeline(
+                "automatic-speech-recognition",
+                model=settings.WHISPER_LARGE_V3_MODEL_PATH,
+                device=device,
+                torch_dtype=torch_dtype,
+                model_kwargs={
+                    "low_cpu_mem_usage": True,
+                    "use_safetensors": True,
+                    "attn_implementation": "sdpa"
+                }
+            )
+            print("Insanely Fast Whisper 모델 로딩 완료")
+
+            try:
+                self.pipe.model = self.pipe.model.to_bettertransformer()
+                print("BetterTransformer 최적화 적용 완료.")
+
+            except Exception as e:
+                print(f"BetterTransformer 적용 살패: {e}")
+            
+            print(f"Insanely Fast Whisper 모델 로딩 완료(Device: {device}, Dtype: {torch_dtype})")
+
+        except Exception as e:
+            print(f"모델 로딩 중 오류 발생: {e}")
+            raise e
+        
+    def transcribe(self, audio_bytes: bytes) -> str:
+        """
+        바이너리 데이터를 임시 파일로 저장 후 librosa로 로드하여 STT 수행
+        """
+        temp_path = None
+        try:
+            # 안전하게 임시 파일 생성 (확장자 webm 명시)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+                temp_file.write(audio_bytes)
+                temp_path = temp_file.name
+
+            print(f"임시 파일 생성됨: {temp_path}")
+            print(f"파일 크기: {os.path.getsize(temp_path)} bytes")
+
+            # librosa로 직접 파일 경로를 읽어서 numpy 배열로 변환
+            audio, sr = librosa.load(temp_path, sr=16000) 
+            print(f"오디오 길이: {len(audio)}, 샘플레이트: {sr}")
+
+            # STT 모델로 한국어로 변환
+            result = self.pipe(
+                audio,
+                chunk_length_s=30,
+                stride_length_s=3,
+                batch_size=8, # VRAM 상황에 따라 조절 (Large 모델은 줄이는 게 안전할 수 있음: 4~8 권장)
+                return_timestamps=False,
+                generate_kwargs={"language": "korean", "task": "transcribe"}
+            )
+
+            # 결과 서빙
+            return result["text"]
+        
+        except Exception as e:
+            print(f"STT 변환 중 에러 발생: {e}")
+            import traceback
+            traceback.print_exc()  # 상세한 에러 로그 출력
+            return ""
+
+        finally:
+            # 임시 파일 삭제
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except Exception as e:
+                    print(f"임시 파일 삭제 실패: {e}")
+
+# global STTService instance 생성 (import 용)
+try:
+    stt_service = InsanelyFastWhisperService()
+except Exception as e:
+    print(f"Insanely Fast Whisper 모델 로딩 실패: {e}")

@@ -1,52 +1,45 @@
-#모듈 정의 : Whisper Large V3 모델 기반 고성능 STT 기능 제공 - Service Class
-#연결 모듈 : src/services/interview_service/interview_service.py (Service)
+# uv pip install torch torchvision torchaudio --torch-backend=cu126
 import torch
-from transformers import pipeline, AutoModelForSpeechSeq2Seq, AutoProcessor
+from transformers import pipeline
 import librosa
 import os, sys
 import tempfile
-import numpy as np
-from dotenv import load_dotenv
-load_dotenv()
+from faster_whisper import WhisperModel
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.config import settings
 
-class WhisperLargeV3Service:
+class FasterWhisperService:
     """
-    OpenAI Whisper Large V3 전용 STT Service
+    Faster Whisper 전용 STT Service
     Singleton 패턴 적용
+    최초 한 번 STT 모델 로딩
     """
     _instance = None # Singleton - 처음 한 번만 객체 생성
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(WhisperLargeV3Service, cls).__new__(cls) # STTService 객체 생성
+            cls._instance = super(FasterWhisperService, cls).__new__(cls) # STTService 객체 생성
             cls._instance.initialize_model() # 모델 로딩 함수 실행
         return cls._instance
 
     # STT 모델 로딩 함수
     def initialize_model(self):
-        print("Whisper Large v3 모델 로딩 중...")
+        print("Faster-Whisper (Large-v3) STT 모델 로딩 중...")
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
+        compute_type = "float16" if device == 'cuda' else "int8"
         # huggingface의 복잡한 모델 사용 과정을 pipeline으로 자동화 (전처리(tensor로 변환) - 모델 추론 - 후처리(decoding))
-        self.pipe = pipeline(
-            "automatic-speech-recognition",
-            model=settings.WHISPER_LARGE_V3_MODEL_PATH,
+        self.model = WhisperModel(
+            model_size_or_path="large-v3",
             device=device,
-            torch_dtype=torch_dtype,
-            model_kwargs={
-                "low_cpu_mem_usage": True,
-                "use_safetensors": True
-            }
+            compute_type=compute_type
         )
-        print("Whisper Large v3 모델 로딩 완료")
+
+        print(f"Faster-Whisper 모델 로딩 완료 (Device: {device})")
 
     def transcribe(self, audio_bytes: bytes) -> str:
         """
-        바이너리 데이터를 임시 파일로 저장 후 librosa로 로드하여 STT 수행
+        바이너리 데이터를 임시 파일로 저장 후 WhisperModel.transcribe로 로드하여 STT 수행
         """
         temp_path = None
         try:
@@ -58,22 +51,20 @@ class WhisperLargeV3Service:
             print(f"임시 파일 생성됨: {temp_path}")
             print(f"파일 크기: {os.path.getsize(temp_path)} bytes")
 
-            # librosa로 직접 파일 경로를 읽어서 numpy 배열로 변환
-            audio, sr = librosa.load(temp_path, sr=16000) 
-            print(f"오디오 길이: {len(audio)}, 샘플레이트: {sr}")
-
-            # STT 모델로 한국어로 변환
-            result = self.pipe(
-                audio,
-                chunk_length_s=30,
-                stride_length_s=3,
-                batch_size=4, # VRAM 상황에 따라 조절 (Large 모델은 줄이는 게 안전할 수 있음: 4~8 권장)
-                return_timestamps=False,
-                generate_kwargs={"language": "korean", "task": "transcribe"}
+            # 추론 (librosa 불필요 - 내부적으로 ffmpeg를 사용)
+            segments, info = self.model.transcribe(
+                temp_path,
+                language='ko',
+                beam_size=5, # 속도가 최우선이면 1로 설정
+                vad_filter=True, # 음성이 없는 구간을 필터링
+                vad_parameters=dict(min_silence_duration_ms=500)
             )
 
+            # STT 모델로 한국어로 변환
+            text_result = "".join([segment.text for segment in segments])
+
             # 결과 서빙
-            return result["text"]
+            return text_result.strip()
         
         except Exception as e:
             print(f"STT 변환 중 에러 발생: {e}")
@@ -90,10 +81,10 @@ class WhisperLargeV3Service:
                     print(f"임시 파일 삭제 실패: {e}")
 
 # global STTService instance 생성 (import 용)
-# try:
-#     stt_service = WhisperLargeV3Service()
-# except Exception as e:
-#     print(f"Whisper Large v3 모델 로딩 실패: {e}")
+try:
+    stt_service = FasterWhisperService()
+except Exception as e:
+    print(f"Faster-Whisper 모델 로딩 실패: {e}")
 
 
 
