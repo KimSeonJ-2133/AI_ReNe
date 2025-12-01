@@ -1,3 +1,5 @@
+#모듈 정의 : Google TTS(gTTS) 기반 기본 TTS 기능 제공 - Service Class
+#연결 모듈 : src/services/interview_service/interview_service.py (Service)
 from gtts import gTTS
 import io
 

@@ -1,0 +1,24 @@
+# [채용] 시니어 백엔드 개발자 (5년 이상)
+
+## 주요 업무
+- 대규모 트래픽을 처리하는 백엔드 시스템 설계 및 개발
+- MSA(Microservices Architecture) 기반의 서비스 구축
+- 데이터베이스 설계 및 쿼리 최적화
+- 코드 리뷰 및 주니어 개발자 멘토링
+
+## 자격 요건
+- 백엔드 개발 경력 5년 이상
+- Java/Spring Boot 또는 Python/Django/FastAPI 개발 경험
+- RDBMS(MySQL, PostgreSQL) 및 NoSQL(Redis, MongoDB) 활용 능력
+- AWS 등 클라우드 환경에서의 개발 및 운영 경험
+
+## 우대 사항
+- 대용량 트래픽 처리 경험자
+- Docker, Kubernetes 등 컨테이너 환경 경험자
+- TDD(Test Driven Development) 기반의 개발 경험
+- 원활한 커뮤니케이션 및 협업 능력
+
+## 근무 환경
+- 유연 근무제
+- 최신 장비 지원
+- 도서 구입비 및 교육비 지원

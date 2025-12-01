@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 # PDF 파싱
-import PyPDF2
+import pypdf
 import pdfplumber
 
 # DOCX 파싱
@@ -17,7 +17,7 @@ def extract_text_from_pdf(file_path: str, use_pdfplumber: bool = True) -> str:
     
     Args:
         file_path: PDF 파일 경로
-        use_pdfplumber: True면 pdfplumber 사용, False면 PyPDF2 사용
+        use_pdfplumber: True면 pdfplumber 사용, False면 pypdf 사용
     
     Returns:
         str: 추출된 텍스트
@@ -33,9 +33,9 @@ def extract_text_from_pdf(file_path: str, use_pdfplumber: bool = True) -> str:
                     if page_text:
                         text += page_text + "\n\n"
         else:
-            # PyPDF2 사용 (fallback)
+            # pypdf 사용 (fallback)
             with open(file_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
+                pdf_reader = pypdf.PdfReader(file)
                 for page in pdf_reader.pages:
                     page_text = page.extract_text()
                     if page_text:
@@ -44,9 +44,9 @@ def extract_text_from_pdf(file_path: str, use_pdfplumber: bool = True) -> str:
         return text.strip()
     
     except Exception as e:
-        # pdfplumber 실패 시 PyPDF2로 재시도
+        # pdfplumber 실패 시 pypdf로 재시도
         if use_pdfplumber:
-            print(f"pdfplumber 추출 실패, PyPDF2로 재시도: {e}")
+            print(f"pdfplumber 추출 실패, pypdf로 재시도: {e}")
             return extract_text_from_pdf(file_path, use_pdfplumber = False)
         else:
             raise Exception(f"PDF 텍스트 추출 실패: {e}")

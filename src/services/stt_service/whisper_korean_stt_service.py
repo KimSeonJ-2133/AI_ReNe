@@ -1,3 +1,5 @@
+#모듈 정의 : 한국어 특화 Whisper 모델 기반 STT 기능 제공 - Service Class
+#연결 모듈 : src/services/interview_service/interview_service.py (Service)
 # uv pip install torch torchvision torchaudio --torch-backend=cu126
 import torch
 from transformers import pipeline

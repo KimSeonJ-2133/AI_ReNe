@@ -1,3 +1,7 @@
+#모듈 정의 : 구직자(Jobseeker)와 기업(Company)의 회원가입 및 로그인 기능을 담당 - Service Class
+#연결 모듈 : src/api/endpoints/auth.py (API),
+#  src/repositories/jobseeker_repository.py,
+#  src/repositories/company_repository.py (Repository)
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 

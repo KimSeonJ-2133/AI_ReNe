@@ -1,4 +1,6 @@
-"""파일 업로드 및 파싱 비즈니스 로직"""
+#모듈 정의 : 구직자 이력서 및 포트폴리오 파일 업로드 및 파싱 처리 - Service Module
+#연결 모듈 : src/api/endpoints/main.py (API),
+#  src/agents/seeker_file_upload_agent.py (Agent)
 import os
 import sys
 import uuid

@@ -1,6 +1,6 @@
-"""
-기업 채용 공고 파일 업로드를 처리하는 Service Layer
-"""
+#모듈 정의 : 기업 채용 공고(JD) 파일 업로드 및 파싱 처리 - Service Module
+#연결 모듈 : src/api/endpoints/main.py (API),
+#  src/agents/company_jd_parser_agent.py (Agent)
 
 import os
 from datetime import datetime
@@ -50,7 +50,8 @@ async def process_company_file_upload(
         }
     """
     # 1. 파일 검증
-    if not validate_file_extension(file.filename):
+    allowed_extensions = [".pdf", ".docx", ".txt"]
+    if not validate_file_extension(file.filename, allowed_extensions):
         raise ValueError(f"지원하지 않는 파일 형식입니다: {file.filename}")
     
     # 2. 파일 저장
