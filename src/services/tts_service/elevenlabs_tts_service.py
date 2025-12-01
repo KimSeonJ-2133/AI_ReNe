@@ -29,7 +29,8 @@ class ElevenLabsTTSService:
             audio_generator = self.client.text_to_speech.convert(
                 text=text,
                 voice_id=self.voice_id,
-                model_id=self.model_id
+                model_id=self.model_id,
+                voice_settings=VoiceSettings(stability=0.1, similarity_boost=0.75)
             )
             
             audio_bytes = b"".join(audio_generator)
@@ -42,8 +43,6 @@ class ElevenLabsTTSService:
 
 try:
     tts_service = ElevenLabsTTSService()
-    text = "Hello, world! This is a test."
-    audio_bytes = tts_service.speak(text)
 except Exception as e:
     print(f"ElevenLabs TTS 로딩 실패: {e}")   
 
