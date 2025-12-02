@@ -19,3 +19,5 @@ class JobseekerSignupResponseDto(BaseModel):
     user_id: int
     email: str
     user_type: str = "jobseeker"
+
+

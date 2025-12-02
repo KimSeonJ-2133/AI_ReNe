@@ -1,6 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date
-from typing import Optional
 
 class JobseekerLoginRequestDto(BaseModel):
     email: str
@@ -15,3 +14,4 @@ class JobseekerSignupRequestDto(BaseModel):
     gender: str
     address: str
     policy_agree_bool: bool = False
+    

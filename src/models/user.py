@@ -25,7 +25,7 @@ class Jobseeker(Base):
     # 관계 설정 (cascade 삭제 설정)
     resumes = relationship("Resume", back_populates="jobseeker", cascade="all, delete-orphan")
     portfolios = relationship("Portfolio", back_populates="jobseeker", cascade="all, delete-orphan")
-    rene_interviews = relationship("ReNeInterview", back_populates="jobseeker", cascade="all, delete-orphan")
+    rene_interviews = relationship("ReneInterview", back_populates="jobseeker", cascade="all, delete-orphan")
     company_ai_interviews = relationship("CompanyAIInterview", back_populates="jobseeker", cascade="all, delete-orphan")
     non_contact_interviews = relationship("NonContactInterview", back_populates="jobseeker", cascade="all, delete-orphan")
     vector_mappings = relationship("JobseekerVectorMapping", back_populates="jobseeker", cascade="all, delete-orphan")
@@ -46,6 +46,7 @@ class Company(Base):
 
     # 관계 설정 (cascade 삭제 설정)
     job_groups = relationship("JobGroup", back_populates="company", cascade="all, delete-orphan")
+    company_introductions = relationship("CompanyIntroduction", back_populates="company", cascade="all, delete-orphan")
     vector_mappings = relationship("CompanyVectorMapping", back_populates="company", cascade="all, delete-orphan")
 
 class JobGroup(Base):
@@ -54,10 +55,16 @@ class JobGroup(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False) # FK 추가
     name = Column(String(100), nullable=False)
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # 관계 설정(cascade 삭제 설정)
     company = relationship("Company", back_populates="job_groups")
     company_ai_interviews = relationship("CompanyAIInterview", back_populates="job_group", cascade="all, delete-orphan")
     non_contact_interviews = relationship("NonContactInterview", back_populates="job_group", cascade="all, delete-orphan")
+<<<<<<< HEAD
     vector_mappings = relationship("JobGroupVectorMapping", back_populates="job_group", cascade="all, delete-orphan")
+    recruitment_notices = relationship("RecruitmentNotice", back_populates="job_group", cascade="all, delete-orphan")
+=======
+    vector_mappings = relationship("JobGroupVectorMapping", back_populates="job_group", cascade="all, delete-orphan")
+>>>>>>> develop

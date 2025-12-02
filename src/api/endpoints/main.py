@@ -1,16 +1,13 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-import uuid
-import random
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.database import engine, Base
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
 from rene_interview_api import rene_router
 from non_contact_interview import non_contact_router
-from auth import router as auth_router
-import models
+from auth import auth_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

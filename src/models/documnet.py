@@ -18,6 +18,9 @@ class Resume(Base):
     certifications = Column(JSON, nullable=True)
     other_experience = Column(JSON, nullable=True)
     languages = Column(JSON, nullable=True)
+    ncs_level = Column(Integer, nullable=False, comment="NCS 수준 (1~8)") # 1~8 단계
+    rcs_level = Column(Integer, nullable=False, comment="RCS 수준 (1~8)") # 1~8 단계
+    markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # 외래키: jobseeker에서 resume를 부를 때 'resumes'라고 부르다
@@ -30,6 +33,35 @@ class Portfolio(Base):
     jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
     main_skills = Column(JSON, nullable=True)
     project_details = Column(JSON, nullable=False) # 최신 5개
-    ncs_level = Column(String(50), nullable=False) # NCS 수준체계 1~8 단계
+    ncs_level = Column(Integer, nullable=False) # NCS 수준체계 1~8 단계
+    rcs_level = Column(Integer, nullable=False) # RCS 수준체계 1~8 단계
+    markdown_content = Column(LONGTEXT, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     jobseeker = relationship("Jobseeker", back_populates="portfolios")
+
+class CompanyIntroduction(Base):
+    __tablename__ = "company_introduction"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
+    markdown_content = Column(LONGTEXT, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    company = relationship("Company", back_populates="company_introductions")
+
+
+class RecruitmentNotice(Base):
+    __tablename__ = "recruitment_notice"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
+    markdown_content = Column(LONGTEXT, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    job_group = relationship("JobGroup", back_populates="recruitment_notices")
+
+
+
+
+

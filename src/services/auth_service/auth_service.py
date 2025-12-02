@@ -4,9 +4,10 @@
 #  src/repositories/company_repository.py (Repository)
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-
-from src.repositories.jobseeker_repository import JobseekerRepository
-from src.repositories.company_repository import CompanyRepository
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.repositories.jobseeker_repository.jobseeker_repository import JobseekerRepository
+from src.repositories.company_repository.company_repository import CompanyRepository
 from src.models.user import Jobseeker, Company
 from src.schemas.jobseeker_schemas.jobseeker_request_dto import JobseekerSignupRequestDto, JobseekerLoginRequestDto
 from src.schemas.company_schemas.company_request_dto import CompanySignupRequestDto, CompanyLoginRequestDto
