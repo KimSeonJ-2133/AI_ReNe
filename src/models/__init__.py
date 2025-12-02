@@ -7,7 +7,7 @@ from .user import (
 from .interview import (
     CompanyAIInterview, 
     NonContactInterview,
-    ReNeInterview,
+    ReneInterview,
     BeginningReneDetail,
     GrowthReneDetail,
     TrialsReneDetail

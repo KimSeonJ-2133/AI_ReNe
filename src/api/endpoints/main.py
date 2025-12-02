@@ -1,15 +1,13 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-import uuid
-import random
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.database import engine, Base
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
 from rene_interview_api import rene_router
 from non_contact_interview import non_contact_router
-import models
+from auth import auth_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -19,7 +17,7 @@ app = FastAPI(title="ReNe Project API", version="1.0.0")
 
 app.include_router(rene_router, prefix="/api/v1")
 app.include_router(non_contact_router, prefix="/api/v1")
-#app.include_router(auth_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +29,7 @@ app.add_middleware(
 
 def init_db():
     print("DB 초기화 스크립트 실행...")
-    #Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
+    Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
     Base.metadata.create_all(bind=engine) # DB 생성
     print("모든 테이블이 생성되었습니다.")
 

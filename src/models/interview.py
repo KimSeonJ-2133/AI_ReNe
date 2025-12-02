@@ -19,7 +19,7 @@ from core.database import Base
 
 
 # 1. 르네 인터뷰 (SuperType)
-class ReNeInterview(Base):
+class ReneInterview(Base):
     __tablename__ = "rene_interview"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

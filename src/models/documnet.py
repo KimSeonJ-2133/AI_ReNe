@@ -48,7 +48,7 @@ class CompanyIntroduction(Base):
     markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    company = relationship("company", back_populates="company_introductions")
+    company = relationship("Company", back_populates="company_introductions")
 
 
 class RecruitmentNotice(Base):

@@ -7,20 +7,20 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
                           
 from src.api.deps import get_db
 from src.services.auth_service.auth_service import AuthService
-from src.schemas.jobseeker_schemas.jobseeker_request_dto import JobseekerSignupRequestDto, JobseekerLoginRequestDto
-from src.schemas.company_schemas.company_request_dto import CompanySignupRequestDto, CompanyLoginRequestDto
-from src.schemas.jobseeker_schemas.jobseeker_response_dto import JobseekerSignupResponseDto, JobseekerLoginResponseDto
-from src.schemas.company_schemas.company_response_dto import CompanySignupResponseDto, CompanyLoginResponseDto
+from src.schemas.jobseeker_schemas import jobseeker_request_dto
+from src.schemas.company_schemas import company_request_dto
+from src.schemas.jobseeker_schemas import jobseeker_response_dto
+from src.schemas.company_schemas import company_response_dto
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # ==========================================
-# 1. 구직자 (Jobseeker) 인증
+# 1. 구직자 (Jobseeker) 
 # ==========================================
 
-@auth_router.post("/signup/jobseeker", status_code=status.HTTP_201_CREATED, response_model=JobseekerSignupResponseDto)
+@auth_router.post("/signup/jobseeker", status_code=status.HTTP_201_CREATED, response_model=jobseeker_response_dto.JobseekerSignupResponseDto)
 def signup_jobseeker(
-    request: JobseekerSignupRequestDto, 
+    request: jobseeker_request_dto.JobseekerSignupRequestDto, 
     db: Session = Depends(get_db)
 ):
     """
@@ -29,9 +29,9 @@ def signup_jobseeker(
     auth_service = AuthService(db)
     return auth_service.signup_jobseeker(request)
 
-@auth_router.post("/login/jobseeker", response_model=JobseekerLoginResponseDto)
+@auth_router.post("/login/jobseeker", response_model=jobseeker_response_dto.JobseekerLoginResponseDto)
 def login_jobseeker(
-    request: JobseekerLoginRequestDto,
+    request: jobseeker_request_dto.JobseekerLoginRequestDto,
     db: Session = Depends(get_db)
 ):
     """
@@ -42,12 +42,12 @@ def login_jobseeker(
 
 
 # ==========================================
-# 2. 기업 (Company) 인증
+# 2. 기업 (Company)
 # ==========================================
 
-@auth_router.post("/signup/company", status_code=status.HTTP_201_CREATED, response_model=CompanySignupResponseDto)
+@auth_router.post("/signup/company", status_code=status.HTTP_201_CREATED, response_model=company_response_dto.CompanySignupResponseDto)
 def signup_company(
-    request: CompanySignupRequestDto,
+    request: company_request_dto.CompanySignupRequestDto,
     db: Session = Depends(get_db)
 ):
     """
@@ -56,9 +56,9 @@ def signup_company(
     auth_service = AuthService(db)
     return auth_service.signup_company(request)
 
-@auth_router.post("/login/company", response_model=CompanyLoginResponseDto)
+@auth_router.post("/login/company", response_model=company_response_dto.CompanyLoginResponseDto)
 def login_company(
-    request: CompanyLoginRequestDto,
+    request: company_request_dto.CompanyLoginRequestDto,
     db: Session = Depends(get_db)
 ):
     """

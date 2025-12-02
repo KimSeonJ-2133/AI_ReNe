@@ -38,7 +38,7 @@ class JobGroupVectorMapping(Base):
     collection_type = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
-    jobgroup = relationship("JobGroup", back_populates="vector_mappings")
+    job_group = relationship("JobGroup", back_populates="vector_mappings")
 
 
 

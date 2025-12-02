@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from datetime import date
 
 class JobseekerLoginRequestDto(BaseModel):
     email: str
@@ -7,5 +8,10 @@ class JobseekerLoginRequestDto(BaseModel):
 class JobseekerSignupRequestDto(BaseModel):
     email: str
     password: str
-    age: int
+    name: str
+    phone: str
+    birthdate: date
+    gender: str
+    address: str
+    policy_agree_bool: bool = False
     
