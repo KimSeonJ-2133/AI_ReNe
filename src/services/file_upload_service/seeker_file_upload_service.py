@@ -1,10 +1,14 @@
-"""파일 업로드 및 파싱 비즈니스 로직"""
+#모듈 정의 : 구직자 이력서 및 포트폴리오 파일 업로드 및 파싱 처리 - Service Module
+#연결 모듈 : src/api/endpoints/main.py (API),
+#  src/agents/seeker_file_upload_agent.py (Agent)
 import os
 import sys
 import uuid
 from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
+from sqlalchemy.orm import Session
+from src.models.documnet import Resume, Portfolio  # 오타 주의: documnet
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from utils.file_storage_utils import save_uploaded_file
@@ -17,8 +21,9 @@ async def process_file_upload(
     session_id: str,
     file_type: str,
     file: UploadFile,
-    user_id: str
-) -> Dict[str, Any]:
+    user_id: str,
+    db: Session = None  # DB 세션 추가
+) -> FileUploadResponse:
     """
     파일 업로드부터 LLM 파싱까지 전체 프로세스 처리
     
@@ -29,12 +34,7 @@ async def process_file_upload(
         user_id: 사용자 ID
     
     Returns:
-        Dict[str, Any]: 처리 결과
-            - file_id: 생성된 파일 ID
-            - ncs_level: NCS 레벨
-            - rcs_level: RCS 레벨
-            - parsed_markdown: 파싱된 마크다운
-            - created_at: 생성 시간
+        FileUploadResponse: 처리 결과 DTO
     
     Raises:
         HTTPException: 처리 중 오류 발생 시
@@ -70,38 +70,54 @@ async def process_file_upload(
         print(f"  - NCS Level: {parsing_result['ncs_level']}")
         print(f"  - RCS Level: {parsing_result['rcs_level']}")
         
-        # 6. DB 저장 (현재는 주석 처리)
+        # 6. DB 저장 (현재 DB 스키마와 불일치하여 주석 처리)
         """
-        # TODO: DB 연동 시 활성화
-        from repositories.seeker_file_upload_repository import create_resume_record
-        
-        db_data = {
-            "jobseeker_id": int(user_id),
-            "file_id": file_id,
-            "file_path": file_path,
-            "original_filename": file.filename,
-            "file_type": file_type,
-            "parsed_markdown": parsing_result["markdown_content"],
-            "parsed_json": parsing_result["parsed_data"],
-            "ncs_level": parsing_result["ncs_level"],
-            "rcs_level": parsing_result["rcs_level"]
-        }
-        
-        resume_record = create_resume_record(db_session, db_data)
-        print(f"[Service] DB 저장 완료 - Record ID: {resume_record.id}")
+        if db:
+            if file_type == "resume":
+                new_record = Resume(
+                    jobseeker_id=int(user_id),
+                    brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", ""),
+                    work_experience=parsing_result["parsed_data"].get("work_experience", []),
+                    brief_project_introduction=parsing_result["parsed_data"].get("brief_project_introduction", []),
+                    education=parsing_result["parsed_data"].get("education", []),
+                    skills=parsing_result["parsed_data"].get("skills", []),
+                    certifications=parsing_result["parsed_data"].get("certifications", []),
+                    other_experience=parsing_result["parsed_data"].get("other_experience", []),
+                    languages=parsing_result["parsed_data"].get("languages", []),
+                    # [추가 필요 컬럼]
+                    # ncs_level=parsing_result["ncs_level"],
+                    # rcs_level=parsing_result["rcs_level"],
+                    # markdown_content=parsing_result["markdown_content"]
+                )
+                db.add(new_record)
+            
+            elif file_type == "portfolio":
+                new_record = Portfolio(
+                    jobseeker_id=int(user_id),
+                    main_skills=parsing_result["parsed_data"].get("main_skills", []),
+                    project_details=parsing_result["parsed_data"].get("project_details", []),
+                    ncs_level=parsing_result["ncs_level"],
+                    # [추가 필요 컬럼]
+                    # rcs_level=parsing_result["rcs_level"],
+                    # markdown_content=parsing_result["markdown_content"]
+                )
+                db.add(new_record)
+            
+            db.commit()
+            db.refresh(new_record)
+            print(f"[Service] DB 저장 완료 - ID: {new_record.id}")
         """
         
         # 7. 응답 데이터 구성
-        response = {
-            "file_id": file_id,
-            "ncs_level": parsing_result["ncs_level"],
-            "rcs_level": parsing_result["rcs_level"],
-            "parsed_markdown": parsing_result["markdown_content"],
-            "created_at": datetime.now().isoformat()
-        }
+        return FileUploadResponse(
+            file_id=file_id,
+            ncs_level=parsing_result["ncs_level"],
+            rcs_level=parsing_result["rcs_level"],
+            parsed_markdown=parsing_result["markdown_content"],
+            created_at=datetime.now().isoformat()
+        )
         
         print(f"[Service] 처리 완료! File ID: {file_id}")
-        return response
     
     except HTTPException as he:
         # FastAPI HTTPException은 그대로 전달

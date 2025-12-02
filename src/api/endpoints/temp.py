@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # 서비스 임포트
-from src.services.file_upload_service.seeker_file_upload_service import process_file_upload
+from services.file_upload_service.seeker_file_upload_service import process_file_upload
 
 app = FastAPI(title="ReNe Project Mock API", version="1.0.0")
 

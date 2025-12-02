@@ -3,7 +3,7 @@
 """
 
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 
@@ -17,8 +17,8 @@ class JDUploadResponse(BaseModel):
     jrs_markdown: str = Field(..., description = "JRS 포맷으로 변환된 마크다운 문자열")
     created_at: str = Field(..., description = "생성 시간 (ISO 8601 형식)")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "file_id": "comp_jd_20241126_143022",
                 "min_rcs_level": "Lv.3",
@@ -27,6 +27,7 @@ class JDUploadResponse(BaseModel):
                 "created_at": "2024-11-26T14:30:22.123456"
             }
         }
+    )
 
 
 class ParsedJRSData(BaseModel):
@@ -39,8 +40,8 @@ class ParsedJRSData(BaseModel):
     domain: str = Field(..., description = "Domain & Constraints 섹션")
     additional_info: Optional[str] = Field(None, description = "추가 정보 섹션")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "basic_profile": "# [1. Basic Target Profile]\n- **Job Title:** Backend Developer...",
                 "hard_skills": "# [2. Hard Skill Criteria]\n## [Critical Stack]...",
@@ -49,6 +50,7 @@ class ParsedJRSData(BaseModel):
                 "additional_info": "# [5. Additional Information]\n- **Work Location:** 서울..."
             }
         }
+    )
 
 
 class JRSErrorResponse(BaseModel):
@@ -59,11 +61,12 @@ class JRSErrorResponse(BaseModel):
     error_message: str = Field(..., description = "에러 메시지")
     detail: Optional[str] = Field(None, description = "상세 에러 정보")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error_code": "JRS_PARSE_FAILED",
                 "error_message": "채용 공고 파싱에 실패했습니다.",
                 "detail": "LLM 응답 형식이 유효하지 않습니다."
             }
         }
+    )

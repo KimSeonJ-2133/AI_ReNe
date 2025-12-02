@@ -1,3 +1,5 @@
+#모듈 정의 : Whisper Large V3 모델 기반 고성능 STT 기능 제공 - Service Class
+#연결 모듈 : src/services/interview_service/interview_service.py (Service)
 import torch
 from transformers import pipeline, AutoModelForSpeechSeq2Seq, AutoProcessor
 import librosa

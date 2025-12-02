@@ -1,23 +1,27 @@
-"""
-기업 채용 공고 파일 업로드를 처리하는 Service Layer
-"""
+#모듈 정의 : 기업 채용 공고(JD) 파일 업로드 및 파싱 처리 - Service Module
+#연결 모듈 : src/api/endpoints/main.py (API),
+#  src/agents/company_jd_parser_agent.py (Agent)
 
 import os
 from datetime import datetime
 from typing import Dict, Any, Optional
 from fastapi import UploadFile
+from sqlalchemy.orm import Session
 
 from src.utils.file_storage_utils import save_uploaded_file, validate_file_extension
 from src.agents.tools.file_text_extractor import extract_text_from_file
 from src.agents.company_jd_parser_agent import parse_jd_with_llm
+from src.schemas.company_schemas.company_file_upload_schemas import JDUploadResponse
+# from src.models.recruitment import RecruitmentNotice  # [가상 모델] 추후 구현 필요
 
 
 async def process_company_file_upload(
     session_id: str,
     file_type: str,
     file: UploadFile,
-    user_id: Optional[str] = None
-) -> Dict[str, Any]:
+    user_id: Optional[str] = None,
+    db: Session = None  # DB 세션 추가
+) -> JDUploadResponse:
     """
     기업 채용 공고 파일 업로드 전체 프로세스 처리
     
@@ -46,7 +50,8 @@ async def process_company_file_upload(
         }
     """
     # 1. 파일 검증
-    if not validate_file_extension(file.filename):
+    allowed_extensions = [".pdf", ".docx", ".txt"]
+    if not validate_file_extension(file.filename, allowed_extensions):
         raise ValueError(f"지원하지 않는 파일 형식입니다: {file.filename}")
     
     # 2. 파일 저장
@@ -77,28 +82,34 @@ async def process_company_file_upload(
     # 5. 파일 ID 생성
     file_id = f"comp_jd_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
-    # TODO: DB 연동 시 활성화
-    # from src.repositories.company_jd_repository import save_jd_to_db
-    # db_result = save_jd_to_db(
-    #     session_id = session_id,
-    #     file_id = file_id,
-    #     user_id = user_id,
-    #     file_path = file_path,
-    #     min_rcs_level = parsing_result["min_rcs_level"],
-    #     target_rcs_level = parsing_result["target_rcs_level"],
-    #     jrs_markdown = parsing_result["jrs_markdown"],
-    #     parsed_data = parsing_result["parsed_data"]
-    # )
+    # 6. DB 저장 (현재 DB 스키마와 불일치하여 주석 처리)
+    """
+    if db and user_id:
+        # RecruitmentNotice 테이블이 있다고 가정
+        new_notice = RecruitmentNotice(
+            company_id=int(user_id),
+            title=file.filename,
+            content=text_content,
+            responsibilities=parsing_result["parsed_data"].get("responsibilities", {}),
+            requirements=parsing_result["parsed_data"].get("requirements", {}),
+            ncs_level=parsing_result["min_rcs_level"], # 매핑 필요
+            rcs_level=parsing_result["target_rcs_level"], # 매핑 필요
+            jrs_markdown=parsing_result["jrs_markdown"]
+        )
+        db.add(new_notice)
+        db.commit()
+        db.refresh(new_notice)
+        print(f"[Service] DB 저장 완료 - ID: {new_notice.id}")
+    """
     
-    # 6. 결과 반환
-    return {
-        "file_id": file_id,
-        "min_rcs_level": parsing_result["min_rcs_level"],
-        "target_rcs_level": parsing_result["target_rcs_level"],
-        "jrs_markdown": parsing_result["jrs_markdown"],
-        "parsed_data": parsing_result["parsed_data"],
-        "created_at": datetime.now().isoformat()
-    }
+    # 7. 결과 반환
+    return JDUploadResponse(
+        file_id=file_id,
+        min_rcs_level=parsing_result["min_rcs_level"],
+        target_rcs_level=parsing_result["target_rcs_level"],
+        jrs_markdown=parsing_result["jrs_markdown"],
+        created_at=datetime.now().isoformat()
+    )
 
 
 def get_parsed_jd(file_id: str) -> Optional[Dict[str, Any]]:

@@ -1,3 +1,6 @@
+#모듈 정의 : 최적화된 Whisper 모델 기반 초고속 STT 기능 제공 - Service Module
+#연결 모듈 : src/services/interview_service/interview_service.py (Service)
+
 import torch
 from transformers import pipeline
 import librosa
@@ -107,7 +110,3 @@ try:
     stt_service = InsanelyFastWhisperService()
 except Exception as e:
     print(f"Insanely Fast Whisper 모델 로딩 실패: {e}")
-
-
-
-    

@@ -1,3 +1,6 @@
+#모듈 정의 : 회의록 자동 생성 및 Google Sheets 연동 - Service Module
+#연결 모듈 : src/api/endpoints/meeting_tool/meeting_tool_app.py (API),
+#  src/utils/google_utils.py (Utils)
 import os
 import sys
 from pathlib import Path

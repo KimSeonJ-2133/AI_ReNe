@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
-                          
+
 from src.api.deps import get_db
 from src.services.auth_service.auth_service import AuthService
 from src.schemas.jobseeker_schemas import jobseeker_request_dto

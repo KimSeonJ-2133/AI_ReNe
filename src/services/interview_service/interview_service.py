@@ -1,10 +1,13 @@
+#모듈 정의 : AI 면접 진행(STT -> Brain -> TTS) 및 세션 관리 - Service Module
+#연결 모듈 : src/api/endpoints/rene_interview_api.py (API),
+#  src/agents/interview_agent.py (Agent)
 # FastAPI & Type Hints
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 
-from agents.interview_agent import interview_agent
-from models.interview import InterviewSession, ChatLog
-from models.documnet import Resume, Portfolio
+from src.agents.interview_agent import interview_agent
+from src.models.interview import InterviewSession, ChatLog
+from src.models.documnet import Resume, Portfolio
 
 # STT 모듈 임포트
 # TTS 모튤 임포트
@@ -63,14 +66,14 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
             # Universal_Evaluator.md의 Action (LEVEL_UP/STAY/LEVEL_DOWN)에 따라 모든 변경
             if action == "LEVEL_UP":
                 if session.current_mode == "MID":
-                    session.new_mode = "HIGH"
+                    new_mode = "HIGH"
                 elif session.current_mode == "LOW":
-                    session.new_mode = "MID"
+                    new_mode = "MID"
             elif action == "LEVEL_DOWN":
                 if session.current_mode == "MID":
-                    session.new_mode = "LOW"
+                    new_mode = "LOW"
                 elif session.current_mode == "HIGH":
-                    session.new_mode = "MID"
+                    new_mode = "MID"
         session.current_mode = new_mode     
         session.turn_count += 1
         # session.current_rcs_level = ...       # (TODO: RCS 레벨 업데이트 로직 추가)

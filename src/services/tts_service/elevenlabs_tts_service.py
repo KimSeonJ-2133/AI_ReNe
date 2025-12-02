@@ -1,3 +1,5 @@
+#모듈 정의 : ElevenLabs API 기반 고품질 TTS 기능 제공 - Service Class
+#연결 모듈 : src/services/interview_service/interview_service.py (Service)
 import os, sys
 from elevenlabs.client import ElevenLabs
 from elevenlabs import VoiceSettings
