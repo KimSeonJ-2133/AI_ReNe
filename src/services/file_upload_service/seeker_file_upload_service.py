@@ -8,7 +8,7 @@ from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
-from src.models.documnet import Resume, Portfolio  # 오타 주의: documnet
+from src.models.document import Resume, Portfolio  # 오타 주의: documnet
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from utils.file_storage_utils import save_uploaded_file

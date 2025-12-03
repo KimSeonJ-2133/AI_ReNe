@@ -1,16 +1,28 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-import os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from dotenv import load_dotenv
-load_dotenv()
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from sqlalchemy.orm import Session
+from src.api.deps import get_db
+from src.services.p2p_service import p2p_service
+from src.schemas.p2p_schemas.p2p_response_dto import P2PChunkResponseDto, P2PReportResponseDto
 
-non_contact_router = APIRouter()
+router = APIRouter(prefix="/p2p", tags=["P2P Interview"])
 
-@non_contact_router.post("/non-contact/voice-chat-save")
-async def voice_chat(file: UploadFile = File(...)):
-    return None
+@router.post("/audio-chunk/{session_id}", response_model=P2PChunkResponseDto)
+async def upload_p2p_audio_chunk(
+    session_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """
+    [P2P] 오디오 청크 업로드 및 STT 처리
+    """
+    return await p2p_service.process_p2p_audio_chunk(db, session_id, file)
 
-@non_contact_router.post("/non-contact/report")
-async def report(user_id: int):
-    return None
-
+@router.post("/report/{session_id}", response_model=P2PReportResponseDto)
+async def generate_p2p_report(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    [P2P] 인터뷰 종료 및 보고서 생성 (P2P Auditor Agent)
+    """
+    return await p2p_service.finalize_p2p_interview(db, session_id)

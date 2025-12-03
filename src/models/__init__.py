@@ -17,7 +17,7 @@ from .vector_mapping import (
     CompanyVectorMapping, 
     JobGroupVectorMapping
 )
-from .documnet import (
+from .document import (
     Resume,
     Portfolio,
     CompanyIntroduction,

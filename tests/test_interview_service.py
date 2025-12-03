@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session
 
 # Import all models to ensure SQLAlchemy registry is populated
 import src.models.user
-import src.models.documnet
+import src.models.document
 import src.models.interview
 import src.models.vector_mapping
 
 from src.services.interview_service.interview_service import process_interview_turn, get_latest_resume_summary
 from src.models.interview import InterviewSession, ChatLog
-from src.models.documnet import Resume
+from src.models.document import Resume
 
 @pytest.fixture
 def mock_db():

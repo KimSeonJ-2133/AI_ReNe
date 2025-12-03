@@ -5,8 +5,8 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.database import engine, Base
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
-from rene_interview_api import rene_router
-from non_contact_interview import non_contact_router
+from src.api.endpoints.rene_interview import rene_router
+from src.api.endpoints.p2p_interview import non_contact_router
 from auth import auth_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles

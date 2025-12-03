@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 # Import all models to ensure SQLAlchemy registry is populated
 import src.models.user
-import src.models.documnet
+import src.models.document
 import src.models.interview
 import src.models.vector_mapping
 
