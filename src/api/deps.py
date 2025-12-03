@@ -2,8 +2,8 @@
 
 from typing import Generator
 import os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from src.core.database import SessionLocal
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from core.database import SessionLocal
 
 # DB 세션 생성 (Dependency)
 def get_db() -> Generator:

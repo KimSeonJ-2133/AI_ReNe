@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class CompanyResponseDto(BaseModel):
@@ -8,7 +8,8 @@ class CompanyResponseDto(BaseModel):
     user_type: str = "company"
 
 class CompanyLoginResponseDto(BaseModel):
-    message: str
+    status_code: int = Field(..., description="HTTP Status Code")
+    message: str = Field(..., description="Response 메시지 (예: 200 OK)")
     company_id: int
     name: str
     email: str

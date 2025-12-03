@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"
 from services.stt_service.faster_whisper_service import stt_service
 from services.tts_service.elevenlabs_tts_service import tts_service
 from utils.audio_file_utils import pcm_to_wav_bytes
-from schemas.beginning_rene_schemas.beginning_rene_response_dto import BeginningReneChatResponseDTO, BeginningReneChatData
+from schemas.beginning_rene_schemas.beginning_rene_response_dto import BeginningReneChatResponseDTO
 from agents.chat_agent import get_chat_response
 from dotenv import load_dotenv
 load_dotenv()
@@ -47,11 +47,12 @@ async def voice_chat(file: UploadFile = File(...)):
         # Json은 바이너리를 직접 보낼 수 없으므로 문자열로 인코등
         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
-        data = BeginningReneChatData(user_text=transcribed_text, ai_response=response, audio_base64=audio_base64)
         return BeginningReneChatResponseDTO(
             status_code=200,
             message= "200 OK, 음성 채팅에 성공하였습니다.",
-            data=data
+            user_text=transcribed_text,
+            ai_response=response,
+            audio_base64=audio_base64
         )
     
     except Exception as e:
