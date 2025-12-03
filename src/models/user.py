@@ -62,9 +62,5 @@ class JobGroup(Base):
     company = relationship("Company", back_populates="job_groups")
     company_ai_interviews = relationship("CompanyAIInterview", back_populates="job_group", cascade="all, delete-orphan")
     non_contact_interviews = relationship("NonContactInterview", back_populates="job_group", cascade="all, delete-orphan")
-<<<<<<< HEAD
     vector_mappings = relationship("JobGroupVectorMapping", back_populates="job_group", cascade="all, delete-orphan")
     recruitment_notices = relationship("RecruitmentNotice", back_populates="job_group", cascade="all, delete-orphan")
-=======
-    vector_mappings = relationship("JobGroupVectorMapping", back_populates="job_group", cascade="all, delete-orphan")
->>>>>>> develop
