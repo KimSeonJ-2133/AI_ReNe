@@ -13,3 +13,4 @@ class JobseekerRepository:
         self.db.commit()
         self.db.refresh(jobseeker)
         return jobseeker
+    

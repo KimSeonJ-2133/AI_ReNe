@@ -5,8 +5,7 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core.database import engine, Base
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
-from rene_interview_api import rene_router
-from non_contact_interview import non_contact_router
+from rene_interview import rene_router
 from auth import auth_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
@@ -16,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="ReNe Project API", version="1.0.0")
 
 app.include_router(rene_router, prefix="/api/v1")
-app.include_router(non_contact_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 
 app.add_middleware(

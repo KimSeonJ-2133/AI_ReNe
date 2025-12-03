@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.agents.interview_agent import interview_agent
 from src.models.interview import InterviewSession, ChatLog
-from src.models.documnet import Resume, Portfolio
+from src.models.document import Resume, Portfolio
 
 # STT 모듈 임포트
 # TTS 모튤 임포트

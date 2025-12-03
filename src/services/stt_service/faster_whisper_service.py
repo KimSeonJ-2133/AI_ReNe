@@ -55,7 +55,7 @@ class FasterWhisperService:
             segments, info = self.model.transcribe(
                 temp_path,
                 language='ko',
-                beam_size=5, # 속도가 최우선이면 1로 설정
+                beam_size=1, # 속도가 최우선이면 1로 설정
                 vad_filter=True, # 음성이 없는 구간을 필터링
                 vad_parameters=dict(min_silence_duration_ms=500)
             )

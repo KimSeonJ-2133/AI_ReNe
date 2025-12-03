@@ -69,7 +69,7 @@ class BeginningReneDetail(Base):
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     rene_interview = relationship(
-        "ReNeInterview", back_populates="beginning_rene_detail"
+        "ReneInterview", back_populates="beginning_rene_detail"
     )
 
 
@@ -83,7 +83,7 @@ class GrowthReneDetail(Base):
     project_details = Column(JSON, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    rene_interview = relationship("ReNeInterview", back_populates="growth_rene_detail")
+    rene_interview = relationship("ReneInterview", back_populates="growth_rene_detail")
 
 
 # 4. 시련의 르네 인터뷰 (SubType)
@@ -101,7 +101,7 @@ class TrialsReneDetail(Base):
     total_advice = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    rene_interview = relationship("ReNeInterview", back_populates="trials_rene_detail")
+    rene_interview = relationship("ReneInterview", back_populates="trials_rene_detail")
 
 
 # 5. 기업 AI 면접
