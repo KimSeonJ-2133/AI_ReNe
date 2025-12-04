@@ -10,13 +10,10 @@ from schemas.p2p_schemas.p2p_response_dto import P2PChunkResponseDto, P2PReportR
 
 p2p_router = APIRouter(prefix="/p2p", tags=["P2P Interview"])
 
-@p2p_router.post("/audio-chunk1")
-async def upload_p2p_audio_chunk(
-    file: UploadFile = File(...),
-    speaker_role: str = Form(...),
-):
+@p2p_router.get("/audio-chunk1")
+async def get_p2p_audio_chunk1():
     """
-    [P2P] 오디오 청크 업로드 및 STT 처리
+    [P2P] 검증 결과 요약 PDF 반환
     """
     # 임시: 결과 파일 반환
     base_path = os.path.join("data", "p2p_sessions")
@@ -28,13 +25,10 @@ async def upload_p2p_audio_chunk(
     return FileResponse(file1, media_type='application/pdf', filename="검증 결과 요약.pdf")
 
 
-@p2p_router.post("/audio-chunk2")
-async def upload_p2p_audio_chunk(
-    file: UploadFile = File(...),
-    speaker_role: str = Form(...),
-):
+@p2p_router.get("/audio-chunk2")
+async def get_p2p_audio_chunk2():
     """
-    [P2P] 오디오 청크 업로드 및 STT 처리
+    [P2P] 면접 결과 요약 PNG 반환
     """
     # 임시: 결과 파일 반환
     base_path = os.path.join("data", "p2p_sessions")
