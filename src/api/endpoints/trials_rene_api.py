@@ -8,7 +8,7 @@ from src.schemas.trials_rene_schemas import trials_rene_request_dto, trials_rene
 
 trials_rene_router = APIRouter(prefix="/rene/trials", tags=["Trials Rene"])
 
-@trials_rene_router.post("/voice-chat/process", response_model=trials_rene_response_dto)
+@trials_rene_router.post("/voice-chat", response_model=trials_rene_response_dto)
 def trials_rene_voice_chat(
         request: trials_rene_request_dto,
         db: Session = Depends(get_db)
