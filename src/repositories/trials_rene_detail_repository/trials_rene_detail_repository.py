@@ -5,7 +5,7 @@ class TrialsReneDetailRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, trials_rene: TrialsReneDetail) -> TrialsRene:
+    def create(self, trials_rene: TrialsReneDetail) -> TrialsReneDetail:
         self.db.add(trials_rene)
         self.db.commit()
         self.db.refresh(trials_rene)
