@@ -43,8 +43,8 @@ class FasterWhisperService:
         """
         temp_path = None
         try:
-            # 안전하게 임시 파일 생성 (확장자 webm 명시)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+            # 안전하게 임시 파일 생성 (확장자 wav 명시 - pcm_to_wav_bytes가 wav 포맷을 반환하므로)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
                 temp_file.write(audio_bytes)
                 temp_path = temp_file.name
 
