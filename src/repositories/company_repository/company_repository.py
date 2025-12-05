@@ -13,3 +13,4 @@ class CompanyRepository:
         self.db.commit()
         self.db.refresh(company)
         return company
+    

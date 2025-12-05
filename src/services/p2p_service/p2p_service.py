@@ -1,5 +1,7 @@
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 from src.services.stt_service.faster_whisper_service import FasterWhisperService
 from src.models.interview import InterviewSession, ChatLog, ReneInterview
 from src.models.user import Jobseeker
@@ -11,7 +13,7 @@ from src.utils.audio_file_utils import pcm_to_wav_bytes
 from src.utils.pdf_utils import generate_pdf_from_markdown
 from datetime import datetime
 import json
-import os
+
 
 # Initialize STT Service
 try:
