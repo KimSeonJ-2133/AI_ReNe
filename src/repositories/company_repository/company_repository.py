@@ -13,3 +13,6 @@ class CompanyRepository:
         self.db.commit()
         self.db.refresh(company)
         return company
+    
+    def get_by_id(self, company_id: int) -> Company | None:
+        return self.db.query(Company).filter(Company.id == company_id).first()

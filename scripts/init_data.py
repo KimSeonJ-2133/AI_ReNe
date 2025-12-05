@@ -25,7 +25,7 @@ embedding_function = embedding_functions.OpenAIEmbeddingFunction(
 
 def init_rdb_and_vector_db():
     print("데이터 초기화 시작...")
-    Base.metadata.drop_all(bind=engine)
+    #Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     print("데이터 초기화 완료...")
 
