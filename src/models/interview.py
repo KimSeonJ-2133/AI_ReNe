@@ -143,7 +143,7 @@ class NonContactInterview(Base):
     )
     start_time = Column(DateTime, nullable=False)
     is_end = Column(Boolean, default=False, nullable=False)
-    full_transcript = Column(LONGTEXT, nullable=True)
+    report = Column(LONGTEXT, nullable=True)
     summary = Column(Text, nullable=True)
     total_score = Column(Float, nullable=True)
     total_evaluation = Column(JSON, nullable=True)
