@@ -93,8 +93,9 @@ async def finalize_p2p_interview() -> P2PReportResponseDto:
         "user_id": "dummy_user_id",
         "name": "테스트구직자",
         "skills": [
-            {"tech_keyword": "Python", "current_level": 3, "context": "Backend Development"},
-            {"tech_keyword": "FastAPI", "current_level": 2, "context": "API Development"}
+            {"tech_keyword": "Node.js", "current_level": 3, "context": "Backend Development"},
+            {"tech_keyword": "React", "current_level": 3, "context": "Frontend Development"},
+            {"tech_keyword": "AWS Lambda", "current_level": 1, "context": "Serverless"}
         ]
     }
 
@@ -134,6 +135,6 @@ async def finalize_p2p_interview() -> P2PReportResponseDto:
     )
 
     # 세션 데이터 정리 (파일 삭제)
-    buffer_manager.clear_session(session_id)
+    # buffer_manager.clear_session(session_id)
 
     return response
