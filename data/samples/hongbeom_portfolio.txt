@@ -1,26 +1,45 @@
-## 자기소개
-안녕하세요, **'최고의 비주얼은 최적화에서 나온다'**는 신념을 가진 4년 차 테크니컬 아티스트 김르네입니다.
-Unreal Engine 5의 차세대 기술(Nanite, Lumen)을 활용한 AAA급 프로젝트 경험이 있으며, 아티스트와 프로그래머 사이의 가교 역할을 수행합니다.
-반복적인 작업을 Python 스크립트로 자동화하여 팀의 생산성을 높이는 데 주력하며, 쉐이더 최적화를 통해 프레임 드랍 문제를 해결하는 과정에서 희열을 느낍니다.
-
-## 경력
-- **(주)넥스트레벨 게임즈 (2021.03 ~ 현재)**: 테크니컬 아티스트 (3년 6개월)
-    - **Unreal Engine 5 기반 오픈월드 RPG 'Project N' 개발 및 상용화**
-    - 테크니컬 아트 리딩: 캐릭터/배경 마스터 머티리얼 제작 및 인스턴스 구조 설계
-    - 렌더링 최적화: HLSL 커스텀 쉐이더 제작 및 텍스처 스트리밍 풀 최적화로 메모리 사용량 30% 절감
-    - 파이프라인 툴 개발: Python & Blueprint를 활용한 에셋 밸리데이션(Validation) 및 오토 임포트 툴 제작
-    
-- **(주)인디스튜디오 (2020.01 ~ 2021.02)**: 게임 클라이언트/TA (1년 2개월)
-    - Unity 기반 모바일 액션 게임 쉐이더 최적화 및 VFX 제작
-    
-## 기술 스택
-- **Engine**: Unreal Engine 4/5 (Expert), Unity
-- **Language**: Python (Tool Dev), C++, HLSL/CG, Blueprints
-- **Tools**: 3ds Max (MaxScript), Substance Designer, Houdini (Basic)
-- **Others**: Perforce, Jira, RenderDoc
-
-## 프로젝트 경험
-- **오토 임포터(Auto Importer) 툴 개발**
-    - 배경: 수천 개의 에셋을 수동으로 임포트하며 발생하는 휴먼 에러와 시간 소모 문제 발생
-    - 해결: Python을 활용해 파일 네이밍 규칙에 따라 텍스처/메시 설정을 자동 적용하는 툴 개발
-    - 성과: 아티스트 작업 시간 일 평균 2시간 단축
+## 1. Project N (AAA Open World Action RPG)
+        - **기간**: 2021.03 ~ 2024.09
+        - **역할**: Lead Technical Artist (기여도 100% - Tech Art 파트 총괄)
+        - **Engine**: Unreal Engine 5.2
+        
+        ### 🛠 주요 기술적 도전 및 해결 (Technical Challenges & Solutions)
+        
+        #### A. 방대한 오픈월드 식생(Foliage) 최적화
+        - **문제**: Nanite를 적용했음에도 불구하고, 빽빽한 숲 지역에서 **Overdraw**로 인한 GPU 병목 발생 (PS5 기준 45fps 하락).
+        - **해결**:
+          1. **Nanite Overdraw 시각화**를 통해 겹침이 심한 메시 식별.
+          2. 나무/풀 메시의 Vertex Color에 WPO(World Position Offset) 로직을 베이킹하여 쉐이더 연산 비용 최소화.
+          3. **Early Z-Pass** 효율을 높이기 위해 마스킹 된 머티리얼을 최소화하고 지오메트리 기반 처리로 전환.
+        - **성과**: 숲 지역 프레임 **45fps -> 60fps** 방어 성공, Base Pass 시간 2ms 단축.
+        
+        #### B. 캐릭터/배경 통합 마스터 머티리얼 시스템 구축
+        - **문제**: 아티스트들이 개별적으로 머티리얼을 생성하여 유지보수가 어렵고 쉐이더 퍼뮤테이션(Permutation) 증가.
+        - **해결**:
+          1. **Material Layers** 기능을 활용하여 질감(Wood, Metal, Skin)과 로직을 분리.
+          2. Static Switch Parameter를 활용해 불필요한 연산을 컴파일 단계에서 제외하는 구조 설계.
+        - **성과**: 전체 쉐이더 개수 30% 감소, 패키징 사이즈 1.5GB 절감.
+        
+        ---
+        
+        ## 2. Asset Pipeline Automation Tool (Python Tool Dev)
+        - **기간**: 2022.06 ~ 2022.08
+        - **역할**: 1인 개발 (설계, UI, 기능 구현 전체)
+        - **Tech**: Python 3.9, PySide2, Unreal Python API
+        
+        ### 🛠 개발 내용
+        
+        #### A. Naming Convention & Spec Validator
+        - **기능**: 아티스트가 Perforce에 Submit 하기 전(Pre-commit hook), 파일명 규칙과 텍스처 해상도(Power of Two), 스태틱 메시의 UV 채널 유무를 자동 검사.
+        - **구현**: Unreal Python API (`unreal.EditorAssetLibrary`)를 사용하여 에셋 메타데이터를 스캔하고, PySide2로 직관적인 GUI 제공.
+        - **성과**: 잘못된 에셋으로 인한 **빌드 브레이크(Build Break) 주 3회 -> 월 0회**로 감소.
+        
+        #### B. Bulk Property Editor
+        - **기능**: 수백 개의 에셋 설정을 일괄 변경 (예: LOD Group, Texture Group, sRGB 설정 등)하는 기능.
+        - **성과**: 아티스트의 단순 반복 작업 시간을 일 평균 1시간 이상 단축.
+        
+        ---
+        
+        ## 3. Procedural Cliff Generator (Houdini R&D)
+        - **내용**: Houdini HDA를 제작하여 언리얼 엔진 내부에서 커브(Curve)만 그리면 자동으로 절벽과 디테일 메시가 배치되는 툴 제작.
+        - **기여**: 레벨 디자이너가 지형을 수정할 때마다 아티스트가 다시 배치해야 하는 비효율을 제거. (생산성 300% 향상)
