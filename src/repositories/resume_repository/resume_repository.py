@@ -12,3 +12,7 @@ class ResumeRepository:
         self.db.commit()
         self.db.refresh(resume)
         return resume
+
+    def get_resume_by_jobseeker_id(self, jobseeker_id: int):
+        """이력서 조회"""
+        return self.db.query(Resume).filter(Resume.jobseeker_id == jobseeker_id).order_by(Resume.created_at.desc()).first()
