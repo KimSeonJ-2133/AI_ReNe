@@ -49,8 +49,8 @@ class Settings(BaseSettings):
     ELEVENLABS_API_KEY: str
 
     # VetorDB collection name
-    COMPANY_COLLECTION_NAME = "company_recruit_data"
-    JOBSEEKER_COLLECTION_NAME = "jobseeker_data"
+    COMPANY_COLLECTION_NAME: str = "company_recruit_data"
+    JOBSEEKER_COLLECTION_NAME: str = "jobseeker_data"
 
     @property
     def DATABASE_URL(self) -> str:

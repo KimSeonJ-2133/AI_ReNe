@@ -10,7 +10,9 @@ from .interview import (
     ReneInterview,
     BeginningReneDetail,
     GrowthReneDetail,
-    TrialsReneDetail
+    TrialsReneDetail,
+    InterviewSession,
+    ChatLog
 )
 from .vector_mapping import (
     JobseekerVectorMapping, 

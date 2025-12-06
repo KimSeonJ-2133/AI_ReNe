@@ -15,7 +15,7 @@ load_dotenv()
 
 db = SessionLocal()
 
-CHROMA_DB_PATH = "../data/chroma_data"
+CHROMA_DB_PATH = "./data/chroma_data"
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
 embedding_function = embedding_functions.OpenAIEmbeddingFunction(
@@ -25,7 +25,7 @@ embedding_function = embedding_functions.OpenAIEmbeddingFunction(
 
 def init_rdb_and_vector_db():
     print("데이터 초기화 시작...")
-    #Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     print("데이터 초기화 완료...")
 

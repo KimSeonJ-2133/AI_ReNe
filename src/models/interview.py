@@ -163,13 +163,12 @@ class InterviewSession(Base):
     면접 진행 중 상태를 저장하는 테이블.
     면접이 종료되면 이 데이터를 가공하여 위 'ReNeInterview' 등의 결과 테이블로 이관합니다.
     """
-
     __tablename__ = "interview_sessions"
 
     session_id = Column(String(50), primary_key=True)  # UUID
     user_id = Column(Integer, index=True)  # jobseeker_id와 매핑
 
-    stage = Column(String(20))  # BEGINNING, GROWTH, TRIAL, CORPORATE
+    stage = Column(String(20))  # BEGINNING, GROWTH, TRIALS, COMPANY_AI, NON_CONTACT
     current_mode = Column(
         String(10), default="MID"
     )  # LOW, MID, HIGH (엘리베이터 알고리즘)
