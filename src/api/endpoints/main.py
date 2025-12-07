@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
 from rene_interview import rene_router
 from p2p_interview_api import p2p_router
 from auth import auth_router
+from upload_api import upload_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -18,6 +19,7 @@ app = FastAPI(title="ReNe Project API", version="1.0.0")
 app.include_router(rene_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(p2p_router, prefix="/api/v1")
+app.include_router(upload_router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
