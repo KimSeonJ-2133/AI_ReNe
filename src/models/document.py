@@ -18,8 +18,8 @@ class Resume(Base):
     certifications = Column(JSON, nullable=True)
     other_experience = Column(JSON, nullable=True)
     languages = Column(JSON, nullable=True)
-    ncs_level = Column(Integer, nullable=False, comment="NCS 수준 (1~8)") # 1~8 단계
-    rcs_level = Column(Integer, nullable=False, comment="RCS 수준 (1~8)") # 1~8 단계
+    ncs_level = Column(Integer, nullable=True, comment="NCS 수준 (1~8)") # 1~8 단계
+    rcs_level = Column(Integer, nullable=True, comment="RCS 수준 (1~8)") # 1~8 단계
     markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -33,8 +33,8 @@ class Portfolio(Base):
     jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
     main_skills = Column(JSON, nullable=True)
     project_details = Column(JSON, nullable=False) # 최신 5개
-    ncs_level = Column(Integer, nullable=False) # NCS 수준체계 1~8 단계
-    rcs_level = Column(Integer, nullable=False) # RCS 수준체계 1~8 단계
+    ncs_level = Column(Integer, nullable=True) # NCS 수준체계 1~8 단계
+    rcs_level = Column(Integer, nullable=True) # RCS 수준체계 1~8 단계
     markdown_content = Column(LONGTEXT, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 

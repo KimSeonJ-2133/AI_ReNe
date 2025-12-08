@@ -100,7 +100,6 @@ def init_rdb_and_vector_db():
             gender="MALE",
             address="서울특별시 서초구",
             policy_agree_bool=True,
-            verified_grade="NOT_VERIFIED",
             is_docs_submit="NONE"
         )
 

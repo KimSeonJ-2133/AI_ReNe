@@ -14,13 +14,17 @@ class Jobseeker(Base):
     password = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=False)
     birthdate = Column(Date, nullable=False)
-    gender = Column(String(10), nullable=False) # Female, Male
+    gender = Column(String(10), nullable=False) # FEMALE, Male
     address = Column(String(255), nullable=False)
-    verified_grade = Column(String(50), nullable=False) # NOT_VERIFIED, DOCS_VERIFIED, PERSONAL_VERIFIED,  ALL_VERIFIED
+    verification_badge = Column(String(50), nullable=False, default="SPROUT") # TROPHY, GREEN_CHECK, PARCHMENT, SPROUT
     policy_agree_bool = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
     is_docs_submit = Column(String(20), nullable=True) # NONE, RESUME, PORTFOLIO, ALL
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    ncs_level = Column(Integer, nullable=True, comment="NCS 수준 (1~8)") # 1~8 단계
+    rcs_level = Column(Integer, nullable=True, comment="RCS 수준 (1~8)") # 1~8 단계
+    talent_type = Column(String(50), nullable=True, comment="인재 유형 4가지") # HIDDEN_GEM, BUBBLE, PROVEN_ACE, LEARNER
+    mbti = Column(String(10), nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now()) 
 
     # 관계 설정 (cascade 삭제 설정)
     resumes = relationship("Resume", back_populates="jobseeker", cascade="all, delete-orphan")

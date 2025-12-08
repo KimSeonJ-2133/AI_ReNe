@@ -26,8 +26,8 @@ class ReneInterview(Base):
     jobseeker_id = Column(
         Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
     )  # 외래키
-    interview_type = Column(String(50), nullable=False)
-    full_transcript = Column(LONGTEXT, nullable=False)
+    interview_type = Column(String(50), nullable=False) # Beginning, Growth, Trials
+    report = Column(LONGTEXT, nullable=False) # 사용자에게 보여줄 면접 보고서
     summary = Column(LONGTEXT, nullable=False)
     end_time = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
@@ -63,8 +63,7 @@ class BeginningReneDetail(Base):
     id = Column(
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
-    occupational_skills = Column(JSON, nullable=False)
-    mbti = Column(String(10), nullable=False)
+    occupational_skills = Column(JSON, nullable=False) # 활용 직업 기술
     recommended_jobs = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -94,11 +93,11 @@ class TrialsReneDetail(Base):
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=False)
+    total_evaluation = Column(JSON, nullable=True)
     ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
-    total_advice = Column(LONGTEXT, nullable=False)
+    total_advice = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     rene_interview = relationship("ReneInterview", back_populates="trials_rene_detail")
@@ -115,10 +114,10 @@ class CompanyAIInterview(Base):
     job_group_id = Column(
         Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
     )
-    full_transcript = Column(LONGTEXT, nullable=False)
+    report = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=False)
+    total_evaluation = Column(JSON, nullable=True)
     ai_result = Column(String(20), nullable=False)
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
