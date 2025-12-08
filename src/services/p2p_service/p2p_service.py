@@ -1,13 +1,19 @@
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 from src.services.stt_service.faster_whisper_service import FasterWhisperService
 from src.models.interview import InterviewSession, ChatLog, ReneInterview
 from src.models.user import Jobseeker
 from src.models.document import Resume
 from src.agents.p2p_auditor_agent import analyze_interview_transcript
 from src.schemas.p2p_schemas.p2p_response_dto import P2PChunkResponseDto, P2PReportResponseDto
+from src.services.p2p_service.buffer_manager import buffer_manager
+from src.utils.audio_file_utils import pcm_to_wav_bytes
+from src.utils.pdf_utils import generate_pdf_from_markdown
 from datetime import datetime
 import json
+
 
 # Initialize STT Service
 try:
@@ -16,105 +22,85 @@ except Exception as e:
     print(f"STT Service Initialization Failed: {e}")
     stt_service = None
 
-async def process_p2p_audio_chunk(db: Session, session_id: str, audio_file: UploadFile, speaker_role: str) -> P2PChunkResponseDto:
+# 단일 세션용 상수 ID
+DEFAULT_SESSION_ID = "single_session_v1"
+
+async def process_p2p_audio_chunk(audio_file: UploadFile, speaker_role: str) -> P2PChunkResponseDto:
     """
-    [P2P] 오디오 청크를 받아 STT 처리 후 로그에 저장
+    [P2P] 오디오 청크를 받아 동적 버퍼링 및 STT 처리
     """
+    session_id = DEFAULT_SESSION_ID
+    
     if not stt_service:
         raise HTTPException(status_code=500, detail="STT Service is not available")
 
-    session = db.query(InterviewSession).filter_by(session_id=session_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    # STT 변환
+    # Step A: 현재 버퍼 상태 확인 (마지막 화자)
+    last_speaker = buffer_manager.get_last_speaker(session_id)
+    
+    # 오디오 데이터 읽기 (PCM)
     audio_bytes = await audio_file.read()
-    text = stt_service.transcribe(audio_bytes)
-
-    if not text:
+    
+    # Step B: 화자가 동일하면 버퍼링 (STT 수행 X)
+    if last_speaker == speaker_role:
+        buffer_manager.append_audio(session_id, audio_bytes)
         return P2PChunkResponseDto(
-            session_id=session_id, 
-            turn_number=session.turn_count, 
-            text="", 
-            status="failed"
-        )
-
-    # ChatLog에 저장 (User Turn)
-    # P2P 면접은 사용자의 발화만 기록될 수도 있고, 상대방(AI)의 발화가 있을 수도 있음.
-    # 여기서는 사용자의 발화를 누적하는 로직을 사용.
-    
-    last_log = db.query(ChatLog).filter_by(session_id=session_id).order_by(ChatLog.turn_number.desc()).first()
-    
-    # 마지막 로그가 있고, AI 응답이 비어있다면(아직 턴이 안 끝남) 이어붙이기
-    if last_log and not last_log.ai_text:
-        last_log.user_text = (last_log.user_text or "") + " " + text
-        current_turn = last_log.turn_number
-    else:
-        # 새로운 턴 시작
-        session.turn_count += 1
-        current_turn = session.turn_count
-        new_log = ChatLog(
             session_id=session_id,
-            turn_number=current_turn,
-            user_text=text,
-            ai_text=None 
+            turn_number=0, # DB 제거로 인해 턴 카운트 추적 생략 (필요시 파일 기반 구현 가능)
+            text="", # 버퍼링 중이므로 텍스트 없음
+            status="buffered"
         )
-        db.add(new_log)
     
-    db.commit()
-
+    # Step C: 화자가 바뀌면 플러시 & 변환
+    # 1. 이전 화자의 오디오 버퍼 처리
+    if last_speaker is not None:
+        buffered_audio = buffer_manager.read_and_clear_buffer(session_id)
+        if buffered_audio:
+            # PCM -> WAV 변환
+            wav_bytes = pcm_to_wav_bytes(buffered_audio)
+            transcribed_text = stt_service.transcribe(wav_bytes)
+            if transcribed_text:
+                buffer_manager.save_transcript(session_id, last_speaker, transcribed_text)
+    
+    # 2. 현재 화자의 오디오로 새 버퍼 시작
+    buffer_manager.append_audio(session_id, audio_bytes)
+    buffer_manager.update_last_speaker(session_id, speaker_role)
+    
     return P2PChunkResponseDto(
         session_id=session_id,
-        turn_number=current_turn,
-        text=text,
-        status="success"
+        turn_number=0,
+        text="", # 현재 청크는 버퍼링 시작됨
+        status="buffered"
     )
 
-async def finalize_p2p_interview(db: Session, session_id: str) -> P2PReportResponseDto:
+async def finalize_p2p_interview() -> P2PReportResponseDto:
     """
     [P2P] 인터뷰 종료 및 보고서 생성
     """
-    session = db.query(InterviewSession).filter_by(session_id=session_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    # 1. 구직자 프로필 구성
-    jobseeker = db.query(Jobseeker).filter(Jobseeker.id == session.user_id).first()
-    if not jobseeker:
-        raise HTTPException(status_code=404, detail="Jobseeker not found")
+    session_id = DEFAULT_SESSION_ID
     
-    resume = db.query(Resume).filter(Resume.jobseeker_id == session.user_id).order_by(Resume.created_at.desc()).first()
-    
-    skills_data = []
-    if resume and resume.skills:
-        # Resume.skills가 JSON이라고 가정 (List[str] 또는 List[Dict])
-        # 여기서는 간단히 처리
-        raw_skills = resume.skills
-        if isinstance(raw_skills, list):
-            for s in raw_skills:
-                if isinstance(s, str):
-                    skills_data.append({"tech_keyword": s, "current_level": 1, "context": "From Resume"})
-                elif isinstance(s, dict):
-                    skills_data.append({
-                        "tech_keyword": s.get("name", "Unknown"),
-                        "current_level": s.get("level", 1),
-                        "context": s.get("description", "")
-                    })
+    # 0. 남은 버퍼 강제 플러시 (Flush remaining buffer)
+    last_speaker = buffer_manager.get_last_speaker(session_id)
+    if last_speaker:
+        buffered_audio = buffer_manager.read_and_clear_buffer(session_id)
+        if buffered_audio:
+            wav_bytes = pcm_to_wav_bytes(buffered_audio)
+            transcribed_text = stt_service.transcribe(wav_bytes)
+            if transcribed_text:
+                buffer_manager.save_transcript(session_id, last_speaker, transcribed_text)
 
+    # 1. 구직자 프로필 구성 (DB 제거로 인한 더미 데이터 사용)
     candidate_profile = {
-        "user_id": str(jobseeker.id),
-        "name": jobseeker.name,
-        "skills": skills_data
+        "user_id": "dummy_user_id",
+        "name": "테스트구직자",
+        "skills": [
+            {"tech_keyword": "Node.js", "current_level": 3, "context": "Backend Development"},
+            {"tech_keyword": "React", "current_level": 3, "context": "Frontend Development"},
+            {"tech_keyword": "AWS Lambda", "current_level": 1, "context": "Serverless"}
+        ]
     }
 
-    # 2. 전체 대화록 구성
-    logs = db.query(ChatLog).filter_by(session_id=session_id).order_by(ChatLog.turn_number).all()
-    full_transcript = ""
-    for log in logs:
-        if log.user_text:
-            full_transcript += f"User: {log.user_text}\n"
-        if log.ai_text:
-            full_transcript += f"Interviewer: {log.ai_text}\n"
+    # 2. 전체 대화록 구성 (BufferManager에서 가져오기)
+    full_transcript = buffer_manager.get_full_transcript(session_id)
 
     # 3. P2P Auditor Agent 호출
     try:
@@ -123,26 +109,32 @@ async def finalize_p2p_interview(db: Session, session_id: str) -> P2PReportRespo
         print(f"Agent Analysis Failed: {e}")
         raise HTTPException(status_code=500, detail=f"Report generation failed: {e}")
 
-    # 4. 결과 저장 (ReneInterview)
-    # P2P 면접 결과를 저장할 적절한 컬럼 매핑
-    # summary -> human_report
-    # total_evaluation -> update_data
+    # 4. 결과 저장 (DB 제거로 인해 생략)
     
-    rene_interview = ReneInterview(
-        jobseeker_id=session.user_id,
-        interview_type="P2P_PEER_REVIEW", # P2P 타입 명시
-        full_transcript=full_transcript,
-        summary=analysis_result.get("human_report", ""),
-        end_time=datetime.now()
-    )
-    db.add(rene_interview)
-    db.commit()
-    
+    # [PDF 생성] Human Report를 PDF로 변환하여 저장
+    human_report_md = analysis_result.get("human_report", "")
+    if human_report_md:
+        pdf_filename = f"report_{session_id}.pdf"
+        # data/p2p_sessions/{session_id} 폴더는 삭제되므로, 상위 폴더나 별도 결과 폴더에 저장
+        # 여기서는 data/reports 폴더에 저장한다고 가정
+        report_dir = "data/reports"
+        if not os.path.exists(report_dir):
+            os.makedirs(report_dir, exist_ok=True)
+            
+        pdf_path = os.path.join(report_dir, pdf_filename)
+        generate_pdf_from_markdown(human_report_md, pdf_path)
+        print(f"PDF Report generated at: {pdf_path}")
+
     # 5. 응답 반환
-    return P2PReportResponseDto(
+    response = P2PReportResponseDto(
         session_id=session_id,
         thinking_process=analysis_result.get("thinking_process", ""),
         human_report=analysis_result.get("human_report", ""),
         update_data=analysis_result.get("update_data", {}),
         raw_response=analysis_result.get("raw_response")
     )
+
+    # 세션 데이터 정리 (파일 삭제)
+    # buffer_manager.clear_session(session_id)
+
+    return response
