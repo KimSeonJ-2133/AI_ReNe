@@ -37,7 +37,7 @@ class AuthService:
             gender=request.gender,
             address=request.address,
             policy_agree_bool=request.policy_agree_bool,
-            verified_grade="NOT_VERIFIED", # 기본값 설정
+            verification_badge="SPROUT", # 기본값 설정
             is_docs_submit="NONE"          # 기본값 설정
         )
         

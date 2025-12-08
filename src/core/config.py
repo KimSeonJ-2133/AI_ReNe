@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     # ElevenLabs
     ELEVENLABS_API_KEY: str
 
+    # VetorDB collection name
+    COMPANY_COLLECTION_NAME: str = "company_recruit_data"
+    JOBSEEKER_COLLECTION_NAME: str = "jobseeker_data"
+
     @property
     def DATABASE_URL(self) -> str:
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

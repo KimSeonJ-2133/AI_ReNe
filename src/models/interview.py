@@ -26,8 +26,8 @@ class ReneInterview(Base):
     jobseeker_id = Column(
         Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
     )  # 외래키
-    interview_type = Column(String(50), nullable=False)
-    full_transcript = Column(LONGTEXT, nullable=False)
+    interview_type = Column(String(50), nullable=False) # Beginning, Growth, Trials
+    report = Column(LONGTEXT, nullable=False) # 사용자에게 보여줄 면접 보고서
     summary = Column(LONGTEXT, nullable=False)
     end_time = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
@@ -63,8 +63,7 @@ class BeginningReneDetail(Base):
     id = Column(
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
-    occupational_skills = Column(JSON, nullable=False)
-    mbti = Column(String(10), nullable=False)
+    occupational_skills = Column(JSON, nullable=False) # 활용 직업 기술
     recommended_jobs = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -94,11 +93,11 @@ class TrialsReneDetail(Base):
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=False)
+    total_evaluation = Column(JSON, nullable=True)
     ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
-    total_advice = Column(LONGTEXT, nullable=False)
+    total_advice = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     rene_interview = relationship("ReneInterview", back_populates="trials_rene_detail")
@@ -115,10 +114,10 @@ class CompanyAIInterview(Base):
     job_group_id = Column(
         Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
     )
-    full_transcript = Column(LONGTEXT, nullable=False)
+    report = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=False)
+    total_evaluation = Column(JSON, nullable=True)
     ai_result = Column(String(20), nullable=False)
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
@@ -143,7 +142,7 @@ class NonContactInterview(Base):
     )
     start_time = Column(DateTime, nullable=False)
     is_end = Column(Boolean, default=False, nullable=False)
-    full_transcript = Column(LONGTEXT, nullable=True)
+    report = Column(LONGTEXT, nullable=True)
     summary = Column(Text, nullable=True)
     total_score = Column(Float, nullable=True)
     total_evaluation = Column(JSON, nullable=True)
@@ -163,13 +162,12 @@ class InterviewSession(Base):
     면접 진행 중 상태를 저장하는 테이블.
     면접이 종료되면 이 데이터를 가공하여 위 'ReNeInterview' 등의 결과 테이블로 이관합니다.
     """
-
     __tablename__ = "interview_sessions"
 
     session_id = Column(String(50), primary_key=True)  # UUID
     user_id = Column(Integer, index=True)  # jobseeker_id와 매핑
 
-    stage = Column(String(20))  # BEGINNING, GROWTH, TRIAL, CORPORATE
+    stage = Column(String(20))  # BEGINNING, GROWTH, TRIALS, COMPANY_AI, NON_CONTACT
     current_mode = Column(
         String(10), default="MID"
     )  # LOW, MID, HIGH (엘리베이터 알고리즘)

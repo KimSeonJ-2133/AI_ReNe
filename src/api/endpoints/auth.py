@@ -12,7 +12,7 @@ from src.schemas.company_schemas import company_request_dto
 from src.schemas.jobseeker_schemas import jobseeker_response_dto
 from src.schemas.company_schemas import company_response_dto
 
-auth_router = APIRouter(prefix="/auth", tags=["Auth"])
+auth_router = APIRouter(tags=["Auth"])
 
 # ==========================================
 # 1. 구직자 (Jobseeker) 

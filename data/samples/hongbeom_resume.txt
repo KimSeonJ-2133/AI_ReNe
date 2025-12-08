@@ -1,0 +1,49 @@
+# 이력서 (Resume)
+        
+## 1. 기본 정보 및 자기소개
+- **이름**: 김홍범
+- **직무**: Technical Artist (Lead급)
+- **한줄 소개**: UE5 AAA 프로젝트 리딩 경험과 Python 툴 개발 역량을 겸비한 5년 차 테크니컬 아티스트
+
+**"아티스트의 상상을 기술로 실현하고, 프로그래머의 성능을 최적화로 지키겠습니다."**
+Unreal Engine 5의 Nanite와 Lumen을 활용한 AAA급 콘솔 프로젝트 경험을 보유하고 있으며, Python 기반의 파이프라인 툴 개발을 통해 반복 작업을 자동화하는 데 강점이 있습니다. 렌더링 파이프라인의 병목을 분석하고 HLSL 쉐이더 최적화를 통해 '비주얼 퀄리티'와 '퍼포먼스'를 동시에 달성합니다.
+
+## 2. 학력 (Education)
+- **한국대학교** (2014.03 ~ 2020.02)
+    - 전공: 게임공학과
+    - 상태: 졸업
+    - 학점: 3.8 / 4.5
+
+## 3. 기술 스택 (Skills)
+- **Game Engines**: Unreal Engine 5 (Expert), Unity
+- **Languages**: Python (Tool Dev), C++, HLSL/CG, Blueprints, MaxScript
+- **Graphics & Tools**: RenderDoc, Unreal Insights, 3ds Max, Substance Designer, Houdini
+- **Collaboration**: Perforce, Jira, Confluence, Git
+
+## 4. 경력 기술 (Work Experience)
+
+### (주)넥스트레벨 게임즈 (2021.03 ~ 현재 / 3년 6개월)
+- **직책**: Lead Technical Artist (팀장)
+- **프로젝트**: Project N (PC/Console 오픈월드 액션 RPG)
+- **주요 업무**:
+    1. **Lumen/Nanite 최적화 가이드 수립**: 과도한 Overdraw를 유발하는 식생(Foliage) 구조 개선 및 Virtual Shadow Map 캐싱 효율화 (GPU 비용 25% 절감).
+    2. **자동화 파이프라인 구축**: Python 기반의 'Asset Validator'를 CI/CD에 연동하여 빌드 안정성 확보.
+    3. **Master Material 설계**: 300종 이상의 머티리얼을 5개의 마스터 머티리얼로 통합하여 관리 효율성 증대.
+
+### (주)인디스튜디오 (2020.01 ~ 2021.02 / 1년 2개월)
+- **직책**: Client Programmer & TA
+- **프로젝트**: 모바일 액션 RPG (Unity)
+- **주요 업무**:
+    1. **모바일 최적화**: 텍스처 압축 포맷(ASTC) 최적화 및 Draw Call 배칭(Batching)으로 저사양 기기 발열 해결.
+    2. **VFX 쉐이더 제작**: 유니티 Shader Graph를 활용한 스킬 이펙트 제작.
+
+## 5. 자격증 (Certifications)
+- **정보처리기사** (한국산업인력공단, 2019.08)
+- **Unity Certified Professional: Programmer** (Unity Technologies, 2020.05)
+
+## 6. 어학 (Languages)
+- **English**: Professional Working Proficiency (OPIc IH - 기술 문서 독해 및 회화 가능)
+
+## 7. 기타 활동 (Other Experience)
+- **Unreal Summit 2023 Speaker** (2023.09): 'Nanite 환경에서의 식생 최적화 사례' 발표
+"""

@@ -13,7 +13,7 @@ from src.utils.audio_file_utils import pcm_to_wav_bytes
 from src.utils.pdf_utils import generate_pdf_from_markdown
 from datetime import datetime
 import json
-import os
+
 
 # Initialize STT Service
 try:
