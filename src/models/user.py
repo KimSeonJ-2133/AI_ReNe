@@ -23,7 +23,7 @@ class Jobseeker(Base):
     ncs_level = Column(Integer, nullable=True, comment="NCS 수준 (1~8)") # 1~8 단계
     rcs_level = Column(Integer, nullable=True, comment="RCS 수준 (1~8)") # 1~8 단계
     talent_type = Column(String(50), nullable=True, comment="인재 유형 4가지") # HIDDEN_GEM, BUBBLE, PROVEN_ACE, LEARNER
-    mbti = Column(String(10), nullable=True)
+    mbti = Column(String(10), nullable=True) 
     created_at = Column(DateTime, nullable=False, server_default=func.now()) 
 
     # 관계 설정 (cascade 삭제 설정)
