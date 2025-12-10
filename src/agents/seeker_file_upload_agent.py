@@ -113,23 +113,166 @@ def extract_rcs_level(markdown_text: str) -> str:
 
 def parse_markdown_sections(markdown_text: str) -> Dict[str, Any]:
     """
-    Markdown 텍스트를 섹션별로 파싱
+    Markdown 텍스트를 섹션별로 파싱하고 구조화된 데이터를 추출
     
     Args:
         markdown_text: LLM이 생성한 마크다운 텍스트
     
     Returns:
-        Dict[str, Any]: 섹션별 데이터
+        Dict[str, Any]: 섹션별 데이터 및 구조화된 정보
     """
-    sections = {
-        "basic_info": extract_section(markdown_text, r'# \[Basic Information\](.*?)---', re.DOTALL),
-        "summary": extract_section(markdown_text, r'# \[Summary: Level Inference\](.*?)---', re.DOTALL),
-        "hard_facts": extract_section(markdown_text, r'# \[Hard Facts: Education & Certifications\](.*?)---', re.DOTALL),
-        "history": extract_section(markdown_text, r'# \[History\](.*?)---', re.DOTALL),
-        "portfolio": extract_section(markdown_text, r'# \[Portfolio & Tech Context\](.*?)$', re.DOTALL)
+    # 1. 섹션 텍스트 추출
+    basic_info_text = extract_section(markdown_text, r'# \[Basic Information\](.*?)---', re.DOTALL)
+    summary_text = extract_section(markdown_text, r'# \[Summary: Level Inference\](.*?)---', re.DOTALL)
+    hard_facts_text = extract_section(markdown_text, r'# \[Hard Facts: Education & Certifications\](.*?)---', re.DOTALL)
+    history_text = extract_section(markdown_text, r'# \[History\](.*?)---', re.DOTALL)
+    portfolio_text = extract_section(markdown_text, r'# \[Portfolio & Tech Context\](.*?)$', re.DOTALL)
+    
+    # 2. 구조화된 데이터 추출
+    skills = extract_skills(hard_facts_text)
+    education = extract_education(hard_facts_text)
+    certifications = extract_certifications(hard_facts_text)
+    work_experience = extract_history(history_text)
+    project_details = extract_portfolio(portfolio_text)
+    
+    # 3. 결과 구성
+    parsed_data = {
+        "basic_info": basic_info_text,
+        "summary": summary_text,
+        "hard_facts": hard_facts_text,
+        "history": history_text,
+        "portfolio": portfolio_text,
+        
+        # 구조화된 데이터 (DB 저장용)
+        "skills": skills,           # Resume용
+        "main_skills": skills,      # Portfolio용 (동일하게 사용)
+        "education": education,
+        "certifications": certifications,
+        "work_experience": work_experience,
+        "project_details": project_details,
+        
+        # 기타 필드 (필요 시 추가 파싱)
+        "brief_self_introduction": extract_summary_line(basic_info_text),
+        "brief_project_introduction": [], # 별도 섹션이 없으므로 빈 리스트
+        "other_experience": [],
+        "languages": []
     }
     
-    return sections
+    return parsed_data
+
+
+def extract_skills(text: str) -> list:
+    """Hard Facts 섹션에서 스킬 추출"""
+    skills = []
+    # 패턴: - [{Category}] **{Tech1 / Tech2}**
+    pattern = r'-\s*\[(.*?)\]\s*\*\*(.*?)\*\*'
+    matches = re.findall(pattern, text)
+    
+    for category, tech_str in matches:
+        # 슬래시(/)나 콤마(,)로 구분된 기술 분리
+        techs = [t.strip() for t in re.split(r'[/,]', tech_str)]
+        skills.extend(techs)
+        
+    return list(set(skills)) # 중복 제거
+
+
+def extract_education(text: str) -> list:
+    """Hard Facts 섹션에서 학력 추출"""
+    education_list = []
+    # 패턴: - **Education:** {Content}
+    pattern = r'-\s*\*\*Education:\*\*\s*(.*)'
+    matches = re.findall(pattern, text)
+    
+    for match in matches:
+        education_list.append(match.strip())
+        
+    return education_list
+
+
+def extract_certifications(text: str) -> list:
+    """Hard Facts 섹션에서 자격증 추출"""
+    cert_list = []
+    # 패턴: - **Certification:** {Content}
+    pattern = r'-\s*\*\*Certification:\*\*\s*(.*)'
+    matches = re.findall(pattern, text)
+    
+    for match in matches:
+        cert_list.append(match.strip())
+        
+    return cert_list
+
+
+def extract_history(text: str) -> list:
+    """History 섹션에서 경력 추출"""
+    history_list = []
+    # ## 1. {Company Name} 패턴으로 분리
+    companies = re.split(r'## \d+\.\s+', text)
+    
+    for company_block in companies:
+        if not company_block.strip():
+            continue
+            
+        lines = company_block.strip().split('\n')
+        company_name = lines[0].strip() # 첫 줄은 회사명 (split에 의해 제목이 내용에 포함됨? 아니면 split이 제목을 먹음?)
+        
+        # re.split을 쓰면 구분자가 사라지므로, finditer를 쓰는게 나을 수 있음.
+        # 간단하게 구현:
+        pass
+    
+    # 더 정확한 파싱을 위해 finditer 사용
+    pattern = r'## \d+\.\s+(.*?)\n(.*?)(?=## \d+\.|$)'
+    matches = re.finditer(pattern, text, re.DOTALL)
+    
+    for match in matches:
+        company_name = match.group(1).strip()
+        content = match.group(2).strip()
+        
+        # Period, Role 추출
+        period_match = re.search(r'-\s*\*\*Period:\*\*\s*(.*)', content)
+        role_match = re.search(r'-\s*\*\*Role:\*\*\s*(.*)', content)
+        
+        history_list.append({
+            "company_name": company_name,
+            "period": period_match.group(1).strip() if period_match else "",
+            "role": role_match.group(1).strip() if role_match else ""
+        })
+        
+    return history_list
+
+
+def extract_portfolio(text: str) -> list:
+    """Portfolio 섹션에서 프로젝트 추출"""
+    project_list = []
+    pattern = r'## \d+\.\s+(.*?)\n(.*?)(?=## \d+\.|$)'
+    matches = re.finditer(pattern, text, re.DOTALL)
+    
+    for match in matches:
+        project_name = match.group(1).strip()
+        content = match.group(2).strip()
+        
+        # Position 추출
+        position_match = re.search(r'-\s*\*\*Position:\*\*\s*(.*)', content)
+        
+        # Facts 추출 (간단히 텍스트로 저장)
+        facts = []
+        fact_matches = re.findall(r'-\s*\*\*Fact \d+.*?\*\*\s*(.*)', content)
+        facts.extend([f.strip('"') for f in fact_matches])
+        
+        project_list.append({
+            "project_name": project_name,
+            "position": position_match.group(1).strip() if position_match else "",
+            "description": "\n".join(facts)
+        })
+        
+    return project_list
+
+
+def extract_summary_line(text: str) -> str:
+    """Basic Info에서 Summary 추출"""
+    match = re.search(r'-\s*\*\*Summary:\*\*\s*"(.*?)"', text)
+    if match:
+        return match.group(1).strip()
+    return ""
 
 
 def extract_section(text: str, pattern: str, flags = 0) -> str:

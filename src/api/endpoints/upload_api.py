@@ -16,15 +16,16 @@ upload_router = APIRouter(prefix="/upload", tags=["File Upload"])
 async def upload_jobseeker_docs(
     file: UploadFile = File(...),
     file_type: str = Form("portfolio"),
+    user_id: int = Form(...),
     db: Session = Depends(get_db)
 ):
     """
     구직자 문서 업로드 (이력서 또는 포트폴리오)
     
     Parameters:
-    - **file**: 업로드 파일 (파일명 형식: {ID}_{Timestamp}.pdf)
-      - 예: jobplz_2512072109.pdf
+    - **file**: 업로드 파일 (PDF, DOCX 등)
     - **file_type**: "resume" 또는 "portfolio"
+    - **user_id**: 구직자 ID (DB PK)
     
     Returns:
     - file_id: 파일 고유 ID
@@ -32,30 +33,12 @@ async def upload_jobseeker_docs(
     - rcs_level: 파싱된 RCS 레벨
     - parsed_markdown: 전체 마크다운 내용
     - created_at: 생성 시간
-    
-    Example:
-    ```bash
-    curl -X POST "http://localhost:8000/api/v1/upload/jobseeker-docs" \\
-      -F "file=@jobplz_2512072109.pdf" \\
-      -F "file_type=resume"
-    ```
     """
     if file_type not in ["resume", "portfolio"]:
         raise HTTPException(
             status_code=400,
             detail="file_type은 'resume' 또는 'portfolio' 중 하나여야 합니다."
         )
-    
-    # 파일명에서 user_id 추출 (예: 20251208_185401_JobSeeker999_... -> JobSeeker999)
-    filename_without_ext = os.path.splitext(file.filename)[0]
-    parts = filename_without_ext.split('_')
-    # 날짜_시간_ID 형식인 경우 index 2 사용, 아니면 기존 로직(index 1) 또는 fallback
-    if len(parts) >= 3:
-        user_id = parts[2]
-    elif len(parts) >= 2:
-        user_id = parts[1]
-    else:
-        user_id = parts[0]
     
     # 세션 ID 생성 (기존 서비스가 요구)
     session_id = str(uuid4())
@@ -72,14 +55,15 @@ async def upload_jobseeker_docs(
 @upload_router.post("/company-docs", response_model=JDUploadResponse)
 async def upload_company_docs(
     file: UploadFile = File(...),
+    company_id: int = Form(...),
     db: Session = Depends(get_db)
 ):
     """
     기업 채용 공고 업로드
     
     Parameters:
-    - **file**: 업로드 파일 (파일명 형식: {ID}_{Timestamp}.pdf)
-      - 예: companyabc_2512072109.pdf
+    - **file**: 업로드 파일 (PDF, DOCX 등)
+    - **company_id**: 기업 ID (DB PK)
     
     Returns:
     - file_id: 파일 고유 ID
@@ -87,23 +71,7 @@ async def upload_company_docs(
     - target_rcs_level: 목표 RCS 레벨
     - jrs_markdown: JRS 포맷 마크다운 (전체 내용)
     - created_at: 생성 시간
-    
-    Example:
-    ```bash
-    curl -X POST "http://localhost:8000/api/v1/upload/company-docs" \\
-      -F "file=@companyabc_2512072109.pdf"
-    ```
     """
-    # 파일명에서 company_id 추출 (예: 123123_companyabc_2512072109.pdf -> companyabc)
-    filename_without_ext = os.path.splitext(file.filename)[0]
-    parts = filename_without_ext.split('_')
-    # 날짜_시간_ID 형식인 경우 index 2 사용, 아니면 기존 로직(index 1) 또는 fallback
-    if len(parts) >= 3:
-        company_id = parts[2]
-    elif len(parts) >= 2:
-        company_id = parts[1]
-    else:
-        company_id = parts[0]
     
     # 세션 ID 생성 (기존 서비스가 요구)
     session_id = str(uuid4())
