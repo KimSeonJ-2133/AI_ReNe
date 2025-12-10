@@ -89,7 +89,7 @@ async def process_file_upload(
         # 7. DB 저장 (활성화)
         if db:
             # Jobseeker 확인 및 자동 생성
-            from models.user import Jobseeker
+            from src.models.user import Jobseeker
             from datetime import date
             
             jobseeker = db.query(Jobseeker).filter(Jobseeker.email == f"{user_id}@temp.com").first()

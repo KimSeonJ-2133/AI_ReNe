@@ -2,7 +2,8 @@
 면접 진행을 위한 Core AI Logic (Evaluator + Persona)
 """
 
-import os
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 import json
 from typing import Dict, Any, List
 from langchain_openai import ChatOpenAI

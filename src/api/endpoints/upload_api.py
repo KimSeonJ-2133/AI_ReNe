@@ -15,7 +15,7 @@ upload_router = APIRouter(prefix="/upload", tags=["File Upload"])
 @upload_router.post("/jobseeker-docs", response_model=FileUploadResponse)
 async def upload_jobseeker_docs(
     file: UploadFile = File(...),
-    file_type: str = Form(...),
+    file_type: str = Form("portfolio"),
     db: Session = Depends(get_db)
 ):
     """
@@ -46,14 +46,21 @@ async def upload_jobseeker_docs(
             detail="file_type은 'resume' 또는 'portfolio' 중 하나여야 합니다."
         )
     
-    # 파일명에서 user_id 추출 (예: jobplz_2512072109.pdf -> jobplz)
+    # 파일명에서 user_id 추출 (예: 20251208_185401_JobSeeker999_... -> JobSeeker999)
     filename_without_ext = os.path.splitext(file.filename)[0]
-    user_id = filename_without_ext.split('_')[0]
+    parts = filename_without_ext.split('_')
+    # 날짜_시간_ID 형식인 경우 index 2 사용, 아니면 기존 로직(index 1) 또는 fallback
+    if len(parts) >= 3:
+        user_id = parts[2]
+    elif len(parts) >= 2:
+        user_id = parts[1]
+    else:
+        user_id = parts[0]
     
     # 세션 ID 생성 (기존 서비스가 요구)
     session_id = str(uuid4())
     
-    return process_file_upload(
+    return await process_file_upload(
         session_id=session_id,
         file_type=file_type,
         file=file,
@@ -87,14 +94,21 @@ async def upload_company_docs(
       -F "file=@companyabc_2512072109.pdf"
     ```
     """
-    # 파일명에서 company_id 추출 (예: companyabc_2512072109.pdf -> companyabc)
+    # 파일명에서 company_id 추출 (예: 123123_companyabc_2512072109.pdf -> companyabc)
     filename_without_ext = os.path.splitext(file.filename)[0]
-    company_id = filename_without_ext.split('_')[0]
+    parts = filename_without_ext.split('_')
+    # 날짜_시간_ID 형식인 경우 index 2 사용, 아니면 기존 로직(index 1) 또는 fallback
+    if len(parts) >= 3:
+        company_id = parts[2]
+    elif len(parts) >= 2:
+        company_id = parts[1]
+    else:
+        company_id = parts[0]
     
     # 세션 ID 생성 (기존 서비스가 요구)
     session_id = str(uuid4())
     
-    return process_company_file_upload(
+    return await process_company_file_upload(
         session_id=session_id,
         file_type="jd",
         file=file,
