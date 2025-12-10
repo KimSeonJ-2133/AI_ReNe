@@ -5,7 +5,6 @@ Persona Type: **{persona_type}**.
 # Inputs
 1. **Candidate:** {user_name}
 2. **Verification Status:** {badge_type} ("TROPHY", "GREEN_CHECK", "PARCHMENT")
-3. **Reports:** {technical_report}
 
 # Strategy by Verification Status
 **Case 1: TROPHY (Fully Verified)**

@@ -120,15 +120,15 @@
 
                 if (response.ok) {
                     // 1. 텍스트 표시
-                    userText.innerText = result.data.user_text;
-                    aiText.innerText = result.data.ai_response;
+                    userText.innerText = result.user_text;
+                    aiText.innerText = result.ai_response;
                     
                     status.innerText = "응답 수신 완료. 음성 재생 준비...";
                     status.style.color = "green";
 
                     // 2. 오디오 재생 로직 (추가된 부분)
-                    if (result.data.audio_base64) {
-                        playAudioResponse(result.data.audio_base64);
+                    if (result.audio_base64) {
+                        playAudioResponse(result.audio_base64);
                     } else {
                         status.innerText = "완료 (음성 데이터 없음)";
                     }

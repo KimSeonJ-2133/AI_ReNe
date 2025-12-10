@@ -14,7 +14,7 @@ class ElevenLabsTTSService:
         
         self.client = ElevenLabs(api_key=self.api_key)
         # 여성 목소리
-        self.voice_id = "Lb7qkOn5hF8p7qfCDH8q"
+        self.voice_id = "OEaq3WGNtNvFJ5co9mJE"
         # 한글 지원 모델
         self.model_id = "eleven_multilingual_v2"
 
