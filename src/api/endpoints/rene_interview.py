@@ -44,6 +44,10 @@ async def voice_chat(file: UploadFile = File(...)):
         print("TTS 변환 시작")
         audio_bytes = tts_service.speak(response)
 
+        if audio_bytes is None:
+            print("에러: TTS 변환 실패 (오디오 데이터 없음)")
+            raise HTTPException(status_code=500, detail="TTS 변환에 실패했습니다.")
+
         # Json은 바이너리를 직접 보낼 수 없으므로 문자열로 인코등
         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
