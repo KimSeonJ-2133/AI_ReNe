@@ -70,13 +70,51 @@ async def process_file_upload(
         print(f"  - NCS Level: {parsing_result['ncs_level']}")
         print(f"  - RCS Level: {parsing_result['rcs_level']}")
         
-        # 6. DB 저장 (현재 DB 스키마와 불일치하여 주석 처리)
-        """
+        # 6. RCS/NCS 레벨 변환 (문자열 -> 정수)
+        def extract_level_number(level_str: str) -> int:
+            """'Lv. 4 (Analysis)' -> 4"""
+            try:
+                if "Lv." in level_str or "Lv" in level_str:
+                    import re
+                    match = re.search(r'Lv\.?\s*(\d+)', level_str)
+                    if match:
+                        return int(match.group(1))
+                return 1  # 기본값
+            except Exception:
+                return 1
+        
+        ncs_level_int = extract_level_number(parsing_result['ncs_level'])
+        rcs_level_int = extract_level_number(parsing_result['rcs_level'])
+        
+        # 7. DB 저장 (활성화)
         if db:
+            # Jobseeker 확인 및 자동 생성
+            from src.models.user import Jobseeker
+            from datetime import date
+            
+            jobseeker = db.query(Jobseeker).filter(Jobseeker.email == f"{user_id}@temp.com").first()
+            
+            if not jobseeker:
+                print(f"[Service] Jobseeker 자동 생성 중... (user_id: {user_id})")
+                jobseeker = Jobseeker(
+                    name=user_id,
+                    email=f"{user_id}@temp.com",
+                    password="temp_password",
+                    phone="010-0000-0000",
+                    birthdate=date(2000, 1, 1),
+                    gender="Unknown",
+                    address="Unknown",
+                    verified_grade="NOT_VERIFIED",
+                    is_docs_submit="NONE"
+                )
+                db.add(jobseeker)
+                db.flush()
+                print(f"[Service] Jobseeker 생성 완료 - ID: {jobseeker.id}")
+            
             if file_type == "resume":
                 new_record = Resume(
-                    jobseeker_id=int(user_id),
-                    brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", ""),
+                    jobseeker_id=jobseeker.id,
+                    brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", "N/A"),
                     work_experience=parsing_result["parsed_data"].get("work_experience", []),
                     brief_project_introduction=parsing_result["parsed_data"].get("brief_project_introduction", []),
                     education=parsing_result["parsed_data"].get("education", []),
@@ -84,32 +122,29 @@ async def process_file_upload(
                     certifications=parsing_result["parsed_data"].get("certifications", []),
                     other_experience=parsing_result["parsed_data"].get("other_experience", []),
                     languages=parsing_result["parsed_data"].get("languages", []),
-                    # [추가 필요 컬럼]
-                    # ncs_level=parsing_result["ncs_level"],
-                    # rcs_level=parsing_result["rcs_level"],
-                    # markdown_content=parsing_result["markdown_content"]
+                    ncs_level=ncs_level_int,
+                    rcs_level=rcs_level_int,
+                    markdown_content=parsing_result["markdown_content"]
                 )
                 db.add(new_record)
             
             elif file_type == "portfolio":
                 new_record = Portfolio(
-                    jobseeker_id=int(user_id),
+                    jobseeker_id=jobseeker.id,
                     main_skills=parsing_result["parsed_data"].get("main_skills", []),
                     project_details=parsing_result["parsed_data"].get("project_details", []),
-                    ncs_level=parsing_result["ncs_level"],
-                    # [추가 필요 컬럼]
-                    # rcs_level=parsing_result["rcs_level"],
-                    # markdown_content=parsing_result["markdown_content"]
+                    ncs_level=ncs_level_int,
+                    rcs_level=rcs_level_int,
+                    markdown_content=parsing_result["markdown_content"]
                 )
                 db.add(new_record)
             
             db.commit()
             db.refresh(new_record)
-            print(f"[Service] DB 저장 완료 - ID: {new_record.id}")
-        """
+            print(f"[Service] DB 저장 완료 - Record ID: {new_record.id}")
         
-        # 7. 응답 데이터 구성
-        return FileUploadResponse(
+        # 8. 응답 데이터 구성
+        response = FileUploadResponse(
             file_id=file_id,
             ncs_level=parsing_result["ncs_level"],
             rcs_level=parsing_result["rcs_level"],
@@ -118,6 +153,7 @@ async def process_file_upload(
         )
         
         print(f"[Service] 처리 완료! File ID: {file_id}")
+        return response
     
     except HTTPException as he:
         # FastAPI HTTPException은 그대로 전달

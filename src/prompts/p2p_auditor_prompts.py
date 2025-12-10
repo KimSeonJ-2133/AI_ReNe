@@ -79,11 +79,29 @@ Compare Question Level vs. Avatar Level vs. Answer Quality:
 - **Interpretation:** Candidate performed as expected for their level.
 - **Action:** MAINTAIN.
 
-## Phase 4: Action Decision
+## Phase 4: Action Decision & Report Generation
 Based on aggregate evidence:
-1. **DOWNGRADE:** Multiple failures at or below current level. Clear skill gap detected.
-2. **MAINTAIN:** Performance matches current level. No significant over/under-performance.
-3. **UPGRADE:** Consistent success at higher levels. Demonstrated advancement readiness.
+1. **Iterate through ALL skills** listed in the Candidate Profile. You MUST generate a report section for EACH skill.
+2. **Detect NEW skills:** If the candidate demonstrates proficiency in a technology NOT listed in the profile, add a new section for it.
+3. **Determine Action:**
+   - **DOWNGRADE:** Multiple failures at or below current level. Clear skill gap detected.
+   - **MAINTAIN:** Performance matches current level. No significant over/under-performance.
+   - **UPGRADE:** Consistent success at higher levels. Demonstrated advancement readiness.
+   - **NEW:** (For detected skills) Assign an estimated RCS level based on performance.
+
+# Output Format Requirements (Strict)
+
+## [PART 2: HUMAN REPORT]
+You must structure the report by SKILL. Do not group them.
+Format:
+### 1. {Skill Name} (현재 레벨: Lv.{N} {Label})
+**검증 내용:**
+- {Summary of questions asked and candidate's performance}
+**종합 판단:**
+- {Final decision and reasoning}
+
+### 2. {Next Skill Name}...
+(Repeat for ALL skills in profile + any NEW skills detected)
 
 # Contextual Analysis Guidelines
 
