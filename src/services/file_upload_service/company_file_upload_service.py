@@ -82,25 +82,50 @@ async def process_company_file_upload(
     # 5. 파일 ID 생성
     file_id = f"comp_jd_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
-    # 6. DB 저장 (현재 DB 스키마와 불일치하여 주석 처리)
-    """
+    # 6. DB 저장 (활성화)
     if db and user_id:
-        # RecruitmentNotice 테이블이 있다고 가정
+        from src.models.user import Company, JobGroup
+        from src.models.document import RecruitmentNotice
+        
+        # Company 확인 및 자동 생성
+        company = db.query(Company).filter(Company.email == f"{user_id}@temp.com").first()
+        
+        if not company:
+            print(f"[Service] Company 자동 생성 중... (company_id: {user_id})")
+            company = Company(
+                name=user_id,
+                email=f"{user_id}@temp.com",
+                password="temp_password",
+                address="Unknown",
+                business_number="000-00-00000",
+                policy_agree_bool=True
+            )
+            db.add(company)
+            db.flush()
+            print(f"[Service] Company 생성 완료 - ID: {company.id}")
+        
+        # JobGroup 확인 및 자동 생성
+        job_group = db.query(JobGroup).filter(JobGroup.company_id == company.id).first()
+        
+        if not job_group:
+            print(f"[Service] JobGroup 자동 생성 중...")
+            job_group = JobGroup(
+                company_id=company.id,
+                name="기본 직군"
+            )
+            db.add(job_group)
+            db.flush()
+            print(f"[Service] JobGroup 생성 완료 - ID: {job_group.id}")
+        
+        # RecruitmentNotice 저장 (markdown_content에 모든 정보 포함)
         new_notice = RecruitmentNotice(
-            company_id=int(user_id),
-            title=file.filename,
-            content=text_content,
-            responsibilities=parsing_result["parsed_data"].get("responsibilities", {}),
-            requirements=parsing_result["parsed_data"].get("requirements", {}),
-            ncs_level=parsing_result["min_rcs_level"], # 매핑 필요
-            rcs_level=parsing_result["target_rcs_level"], # 매핑 필요
-            jrs_markdown=parsing_result["jrs_markdown"]
+            job_group_id=job_group.id,
+            markdown_content=parsing_result["jrs_markdown"]
         )
         db.add(new_notice)
         db.commit()
         db.refresh(new_notice)
-        print(f"[Service] DB 저장 완료 - ID: {new_notice.id}")
-    """
+        print(f"[Service] RecruitmentNotice 저장 완료 - ID: {new_notice.id}")
     
     # 7. 결과 반환
     return JDUploadResponse(

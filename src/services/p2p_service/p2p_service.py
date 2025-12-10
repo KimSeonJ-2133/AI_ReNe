@@ -5,7 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 from src.services.stt_service.faster_whisper_service import FasterWhisperService
 from src.models.interview import InterviewSession, ChatLog, ReneInterview
 from src.models.user import Jobseeker
-from src.models.document import Resume
+from src.models.document import Resume, Portfolio
+from src.core.database import SessionLocal
 from src.agents.p2p_auditor_agent import analyze_interview_transcript
 from src.schemas.p2p_schemas.p2p_response_dto import P2PChunkResponseDto, P2PReportResponseDto
 from src.services.p2p_service.buffer_manager import buffer_manager
@@ -72,9 +73,11 @@ async def process_p2p_audio_chunk(audio_file: UploadFile, speaker_role: str) -> 
         status="buffered"
     )
 
-async def finalize_p2p_interview() -> P2PReportResponseDto:
+async def finalize_p2p_interview() -> str:
     """
     [P2P] 인터뷰 종료 및 보고서 생성
+    Returns:
+        str: 생성된 PDF 보고서 파일 경로
     """
     session_id = DEFAULT_SESSION_ID
     
@@ -88,16 +91,76 @@ async def finalize_p2p_interview() -> P2PReportResponseDto:
             if transcribed_text:
                 buffer_manager.save_transcript(session_id, last_speaker, transcribed_text)
 
-    # 1. 구직자 프로필 구성 (DB 제거로 인한 더미 데이터 사용)
+    # 1. 구직자 프로필 구성 (DB 연동)
+    target_jobseeker_id = 2  # 하드코딩: ID 2번 구직자
     candidate_profile = {
-        "user_id": "dummy_user_id",
-        "name": "테스트구직자",
-        "skills": [
-            {"tech_keyword": "Node.js", "current_level": 3, "context": "Backend Development"},
-            {"tech_keyword": "React", "current_level": 3, "context": "Frontend Development"},
-            {"tech_keyword": "AWS Lambda", "current_level": 1, "context": "Serverless"}
-        ]
+        "user_id": str(target_jobseeker_id),
+        "name": "Unknown",
+        "skills": [],
+        "portfolio_markdown": "" # 포트폴리오 마크다운 내용 추가
     }
+    
+    db = SessionLocal()
+    try:
+        # ID로 직접 조회
+        jobseeker = db.query(Jobseeker).filter(Jobseeker.id == target_jobseeker_id).first()
+        
+        if jobseeker:
+            candidate_profile["name"] = jobseeker.name
+            
+            # 가장 최근 포트폴리오 조회
+            portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == jobseeker.id).order_by(Portfolio.created_at.desc()).first()
+            
+            if portfolio:
+                # 마크다운 내용 가져오기 (필수)
+                if portfolio.markdown_content:
+                    candidate_profile["portfolio_markdown"] = portfolio.markdown_content
+                    print(f"[P2P Service] 포트폴리오 마크다운 로드 완료 (길이: {len(portfolio.markdown_content)})")
+                else:
+                    print(f"[P2P Service] 포트폴리오 마크다운 내용이 비어있습니다. (User ID: {target_jobseeker_id})")
+                
+                # skills 파싱 로직 복구 (main_skills가 있으면 사용)
+                if portfolio.main_skills:
+                    skills_data = portfolio.main_skills
+                    if isinstance(skills_data, list):
+                        for skill in skills_data:
+                            # 스킬 데이터 정규화
+                            tech_keyword = skill.get("tech_keyword") or skill.get("name") or "Unknown"
+                            level_str = skill.get("level") or skill.get("current_level") or "Lv.1"
+                            
+                            # 레벨 파싱 (Lv.3 -> 3)
+                            import re
+                            level_match = re.search(r'\d+', str(level_str))
+                            current_level = int(level_match.group()) if level_match else 1
+                            
+                            candidate_profile["skills"].append({
+                                "tech_keyword": tech_keyword,
+                                "current_level": current_level,
+                                "context": skill.get("context") or skill.get("description") or ""
+                            })
+
+            else:
+                print(f"[P2P Service] 포트폴리오를 찾을 수 없습니다. (User ID: {target_jobseeker_id})")
+        else:
+            print(f"[P2P Service] 구직자를 찾을 수 없습니다. (User ID: {target_jobseeker_id})")
+            
+    except Exception as e:
+        print(f"[P2P Service] DB 조회 중 오류 발생: {e}")
+    finally:
+        db.close()
+        
+    # Fallback: 마크다운이 없는 경우에만 더미 데이터 사용
+    if not candidate_profile["portfolio_markdown"]:
+        print("[P2P Service] 포트폴리오 마크다운을 가져오지 못해 더미 데이터를 사용합니다.")
+        candidate_profile["portfolio_markdown"] = """
+# [Basic Information]
+- **Name:** Unknown
+- **Summary:** No portfolio data available.
+"""
+        # skills는 사용하지 않으므로 비워둠
+        candidate_profile["skills"] = []
+
+    print(f"[P2P Service] Candidate Profile: {candidate_profile}")
 
     # 2. 전체 대화록 구성 (BufferManager에서 가져오기)
     full_transcript = buffer_manager.get_full_transcript(session_id)
@@ -124,17 +187,11 @@ async def finalize_p2p_interview() -> P2PReportResponseDto:
         pdf_path = os.path.join(report_dir, pdf_filename)
         generate_pdf_from_markdown(human_report_md, pdf_path)
         print(f"PDF Report generated at: {pdf_path}")
+        
+        # 세션 데이터 정리 (파일 삭제)
+        # buffer_manager.clear_session(session_id)
 
-    # 5. 응답 반환
-    response = P2PReportResponseDto(
-        session_id=session_id,
-        thinking_process=analysis_result.get("thinking_process", ""),
-        human_report=analysis_result.get("human_report", ""),
-        update_data=analysis_result.get("update_data", {}),
-        raw_response=analysis_result.get("raw_response")
-    )
+        return pdf_path
 
-    # 세션 데이터 정리 (파일 삭제)
-    # buffer_manager.clear_session(session_id)
-
-    return response
+    # PDF 생성이 안된 경우 (예외 처리)
+    raise HTTPException(status_code=500, detail="Failed to generate PDF report")

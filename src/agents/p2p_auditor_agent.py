@@ -94,6 +94,16 @@ def construct_user_prompt(
     
     skills_section = "\n".join(skills_info) if skills_info else "- (No skills registered)"
     
+    # 포트폴리오 마크다운 섹션 추가
+    portfolio_section = ""
+    if candidate_profile.get("portfolio_markdown"):
+        portfolio_section = f"""
+# Portfolio / Resume Context
+The following is the detailed content of the candidate's portfolio/resume:
+
+{candidate_profile['portfolio_markdown']}
+"""
+
     prompt = f"""# Candidate Profile (Avatar)
 
 **User ID:** {candidate_profile.get('user_id', 'Unknown')}
@@ -101,6 +111,8 @@ def construct_user_prompt(
 
 **Current Skill Levels:**
 {skills_section}
+
+{portfolio_section}
 
 ---
 

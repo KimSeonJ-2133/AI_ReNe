@@ -144,13 +144,43 @@ def generate_pdf_from_markdown(markdown_text: str, output_path: str) -> bool:
         traceback.print_exc()
         return False
 
-
-        if pisa_status.err:
-            print(f"PDF 생성 중 오류 발생: {pisa_status.err}")
-            return False
+def convert_pdf_to_image(pdf_path: str, output_image_path: str = None) -> str:
+    """
+    PDF 파일의 첫 페이지를 이미지(PNG)로 변환합니다.
+    PyMuPDF (fitz)를 사용합니다.
+    
+    Args:
+        pdf_path: 변환할 PDF 파일 경로
+        output_image_path: 저장할 이미지 파일 경로 (None일 경우 PDF 경로 기반으로 자동 생성)
+        
+    Returns:
+        str: 생성된 이미지 파일 경로
+    """
+    try:
+        import fitz  # PyMuPDF
+        
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
             
-        return True
-
+        doc = fitz.open(pdf_path)
+        if doc.page_count < 1:
+            raise ValueError("PDF has no pages")
+            
+        # 첫 페이지만 변환
+        page = doc.load_page(0)
+        pix = page.get_pixmap(dpi=150) # 150 DPI로 렌더링
+        
+        if output_image_path is None:
+            output_image_path = os.path.splitext(pdf_path)[0] + ".png"
+            
+        pix.save(output_image_path)
+        doc.close()
+        
+        return output_image_path
+        
+    except ImportError:
+        print("PyMuPDF (fitz) is not installed. Please install it using 'uv pip install pymupdf'")
+        raise
     except Exception as e:
-        print(f"PDF 변환 실패: {e}")
-        return False
+        print(f"PDF to Image conversion failed: {e}")
+        raise
