@@ -13,7 +13,7 @@
    - `final_score` (0~100점): 직무 적합성, 기술 역량, 컬처핏을 종합한 점수.
    - `hiring_decision`: "PASS" (합격), "HOLD" (보류), "FAIL" (불합격).
      * PASS 기준: 80점 이상이며 치명적 결격 사유가 없음.
-     * FAIL 기준: 60점 미만 또는 치명적 결격 사유 존재.
+     * FAIL 기준: 50점 미만 또는 치명적 결격 사유 존재.
 
 2. **상세 리포트 (Report & Summary)**
    - `detailed_report`: 인사팀장이 읽을 수 있는 500자 내외의 상세 분석 보고서. (강점, 약점, 종합 의견 포함)
@@ -24,11 +24,11 @@
    - 등급: S(Expert), A(Advanced), B(Intermediate), C(Beginner), F(Fail).
 
 4. **Best / Worst 답변 추출**
-   - `best_answer`: 지원자의 역량이 가장 잘 드러난 최고의 답변 (대화 내용 발췌).
-   - `worst_answer`: 가장 논리가 부족했거나 답변을 못한 최악의 답변 (대화 내용 발췌).
+   - `best_answer`: 지원자의 역량이 가장 잘 드러난 최고의 답변과 선정된 이유 (대화 내용 발췌).
+   - `worst_answer`: 가장 논리가 부족했거나 답변을 못한 최악의 답변과 선정된 이유 (대화 내용 발췌).
 
 5. **피드백 (Advice)**
-   - `feedback_for_candidate`: (실전이지만) 지원자에게 줄 수 있는 정중한 피드백이나 조언.
+   - `feedback_for_candidate`: (실전이지만) 면접 분석자가 지원자에게 줄 수 있는 정중한 피드백이나 조언.
 
 # 출력 형식 (JSON Strict)
 반드시 아래 JSON 포맷을 엄격히 준수하십시오.
