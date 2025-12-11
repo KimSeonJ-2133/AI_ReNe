@@ -100,6 +100,7 @@ async def process_file_upload(
                 )
             
             if file_type == "resume":
+                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (skills, education 등)
                 new_record = Resume(
                     jobseeker_id=jobseeker.id,
                     brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", "N/A"),
@@ -117,6 +118,7 @@ async def process_file_upload(
                 db.add(new_record)
             
             elif file_type == "portfolio":
+                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (main_skills, project_details 등)
                 new_record = Portfolio(
                     jobseeker_id=jobseeker.id,
                     main_skills=parsing_result["parsed_data"].get("main_skills", []),

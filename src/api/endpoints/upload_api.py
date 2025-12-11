@@ -4,6 +4,7 @@ import os
 from uuid import uuid4
 
 from api.deps import get_db
+from src.models.user import Jobseeker
 from services.file_upload_service.seeker_file_upload_service import process_file_upload
 from services.file_upload_service.company_file_upload_service import process_company_file_upload
 from schemas.jobseeker_schemas.seeker_file_upload_schemas import FileUploadResponse
@@ -16,16 +17,14 @@ upload_router = APIRouter(prefix="/upload", tags=["File Upload"])
 async def upload_jobseeker_docs(
     file: UploadFile = File(...),
     file_type: str = Form("portfolio"),
-    user_id: int = Form(...),
     db: Session = Depends(get_db)
 ):
     """
     구직자 문서 업로드 (이력서 또는 포트폴리오)
     
     Parameters:
-    - **file**: 업로드 파일 (PDF, DOCX 등)
+    - **file**: 업로드 파일 (파일명에서 사용자 이메일 추출. 예: 01_jobplz.pdf -> jobplz)
     - **file_type**: "resume" 또는 "portfolio"
-    - **user_id**: 구직자 ID (DB PK)
     
     Returns:
     - file_id: 파일 고유 ID
@@ -39,6 +38,29 @@ async def upload_jobseeker_docs(
             status_code=400,
             detail="file_type은 'resume' 또는 'portfolio' 중 하나여야 합니다."
         )
+    
+    # 파일명에서 username(email) 추출
+    # 로직: {순서}_{username}.{확장자} 또는 {username}.{확장자}
+    # 예: "01_jobplz.pdf" -> "jobplz"
+    filename = file.filename
+    name_without_ext = os.path.splitext(filename)[0]
+    parts = name_without_ext.split('_')
+    
+    if len(parts) >= 2:
+        username = parts[-1]
+    else:
+        username = name_without_ext
+        
+    # DB에서 사용자 조회 (email 기준)
+    jobseeker = db.query(Jobseeker).filter(Jobseeker.email == username).first()
+    
+    if not jobseeker:
+        raise HTTPException(
+            status_code=404,
+            detail=f"해당 이메일({username})을 가진 구직자를 찾을 수 없습니다."
+        )
+    
+    user_id = jobseeker.id
     
     # 세션 ID 생성 (기존 서비스가 요구)
     session_id = str(uuid4())
