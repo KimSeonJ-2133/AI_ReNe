@@ -35,7 +35,7 @@ def analyze_interview_transcript(
                 ]
             }
         interview_transcript: P2P 면접 대화 로그 (전체 텍스트)
-        model: 사용할 LLM 모델 (기본값: gpt-4o)
+        model: 사용할 LLM 모델 (기본값: gpt-4.1)
         
     Returns:
         Dict containing:
