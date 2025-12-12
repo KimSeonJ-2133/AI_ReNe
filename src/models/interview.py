@@ -93,7 +93,7 @@ class TrialsReneDetail(Base):
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=True)
+    skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
@@ -117,7 +117,6 @@ class CompanyAIInterview(Base):
     report = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=True)
     skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     ai_result = Column(String(20), nullable=False)
     best_answer = Column(Text, nullable=False)
@@ -146,7 +145,6 @@ class NonContactInterview(Base):
     report = Column(LONGTEXT, nullable=True)
     summary = Column(Text, nullable=True)
     total_score = Column(Float, nullable=True)
-    total_evaluation = Column(JSON, nullable=True)
     skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     best_answer = Column(Text, nullable=True)
     worst_answer = Column(Text, nullable=True)
