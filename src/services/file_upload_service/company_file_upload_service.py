@@ -19,7 +19,7 @@ async def process_company_file_upload(
     session_id: str,
     file_type: str,
     file: UploadFile,
-    user_id: Optional[str] = None,
+    user_id: int,
     db: Session = None  # DB 세션 추가
 ) -> JDUploadResponse:
     """
@@ -37,7 +37,7 @@ async def process_company_file_upload(
         session_id: 세션 ID
         file_type: 파일 유형 (jd, job_description 등)
         file: 업로드된 파일 객체
-        user_id: 사용자 ID (기업 ID)
+        user_id: 사용자 ID (기업 ID, PK)
         
     Returns:
         {
@@ -55,7 +55,7 @@ async def process_company_file_upload(
         raise ValueError(f"지원하지 않는 파일 형식입니다: {file.filename}")
     
     # 2. 파일 저장
-    user_folder = user_id if user_id else "anonymous"
+    user_folder = str(user_id)
     file_path = await save_uploaded_file(
         file = file,
         user_id = user_folder,
@@ -83,28 +83,21 @@ async def process_company_file_upload(
     file_id = f"comp_jd_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     # 6. DB 저장 (활성화)
-    if db and user_id:
+    if db:
         from src.models.user import Company, JobGroup
         from src.models.document import RecruitmentNotice
+        from fastapi import HTTPException
         
-        # Company 확인 및 자동 생성
-        company = db.query(Company).filter(Company.email == f"{user_id}@temp.com").first()
+        # Company 확인
+        company = db.query(Company).filter(Company.id == user_id).first()
         
         if not company:
-            print(f"[Service] Company 자동 생성 중... (company_id: {user_id})")
-            company = Company(
-                name=user_id,
-                email=f"{user_id}@temp.com",
-                password="temp_password",
-                address="Unknown",
-                business_number="000-00-00000",
-                policy_agree_bool=True
+            raise HTTPException(
+                status_code=404,
+                detail=f"기업 정보를 찾을 수 없습니다. (ID: {user_id})"
             )
-            db.add(company)
-            db.flush()
-            print(f"[Service] Company 생성 완료 - ID: {company.id}")
         
-        # JobGroup 확인 및 자동 생성
+        # JobGroup 확인 및 자동 생성 (기본 직군)
         job_group = db.query(JobGroup).filter(JobGroup.company_id == company.id).first()
         
         if not job_group:

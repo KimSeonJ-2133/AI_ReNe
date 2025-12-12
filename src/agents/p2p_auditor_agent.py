@@ -35,7 +35,7 @@ def analyze_interview_transcript(
                 ]
             }
         interview_transcript: P2P 면접 대화 로그 (전체 텍스트)
-        model: 사용할 LLM 모델 (기본값: gpt-4o)
+        model: 사용할 LLM 모델 (기본값: gpt-4.1)
         
     Returns:
         Dict containing:
@@ -94,14 +94,16 @@ def construct_user_prompt(
     
     skills_section = "\n".join(skills_info) if skills_info else "- (No skills registered)"
     
-    # 포트폴리오 마크다운 섹션 추가
+    # 포트폴리오 요약 섹션 추가 (우선순위: Summary > Markdown)
+    portfolio_content = candidate_profile.get("portfolio_summary") or candidate_profile.get("portfolio_markdown") or ""
+    
     portfolio_section = ""
-    if candidate_profile.get("portfolio_markdown"):
+    if portfolio_content:
         portfolio_section = f"""
 # Portfolio / Resume Context
-The following is the detailed content of the candidate's portfolio/resume:
+The following is the structured summary of the candidate's portfolio/resume:
 
-{candidate_profile['portfolio_markdown']}
+{portfolio_content}
 """
 
     prompt = f"""# Candidate Profile (Avatar)

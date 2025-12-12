@@ -21,7 +21,7 @@ async def process_file_upload(
     session_id: str,
     file_type: str,
     file: UploadFile,
-    user_id: str,
+    user_id: int,
     db: Session = None  # DB 세션 추가
 ) -> FileUploadResponse:
     """
@@ -31,7 +31,7 @@ async def process_file_upload(
         session_id: 세션 ID
         file_type: 파일 타입 ("resume" 또는 "portfolio")
         file: FastAPI UploadFile 객체
-        user_id: 사용자 ID
+        user_id: 사용자 ID (PK)
     
     Returns:
         FileUploadResponse: 처리 결과 DTO
@@ -49,7 +49,7 @@ async def process_file_upload(
         
         # 2. 파일 저장
         print(f"[Service] 파일 저장 중... (user_id: {user_id}, file_type: {file_type})")
-        file_path = await save_uploaded_file(file, user_id, file_type)
+        file_path = await save_uploaded_file(file, str(user_id), file_type)
         print(f"[Service] 파일 저장 완료: {file_path}")
         
         # 3. 텍스트 추출
@@ -88,30 +88,19 @@ async def process_file_upload(
         
         # 7. DB 저장 (활성화)
         if db:
-            # Jobseeker 확인 및 자동 생성
+            # Jobseeker 확인
             from src.models.user import Jobseeker
-            from datetime import date
             
-            jobseeker = db.query(Jobseeker).filter(Jobseeker.email == f"{user_id}@temp.com").first()
+            jobseeker = db.query(Jobseeker).filter(Jobseeker.id == user_id).first()
             
             if not jobseeker:
-                print(f"[Service] Jobseeker 자동 생성 중... (user_id: {user_id})")
-                jobseeker = Jobseeker(
-                    name=user_id,
-                    email=f"{user_id}@temp.com",
-                    password="temp_password",
-                    phone="010-0000-0000",
-                    birthdate=date(2000, 1, 1),
-                    gender="Unknown",
-                    address="Unknown",
-                    verified_grade="NOT_VERIFIED",
-                    is_docs_submit="NONE"
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"구직자 정보를 찾을 수 없습니다. (ID: {user_id})"
                 )
-                db.add(jobseeker)
-                db.flush()
-                print(f"[Service] Jobseeker 생성 완료 - ID: {jobseeker.id}")
             
             if file_type == "resume":
+                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (skills, education 등)
                 new_record = Resume(
                     jobseeker_id=jobseeker.id,
                     brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", "N/A"),
@@ -129,6 +118,7 @@ async def process_file_upload(
                 db.add(new_record)
             
             elif file_type == "portfolio":
+                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (main_skills, project_details 등)
                 new_record = Portfolio(
                     jobseeker_id=jobseeker.id,
                     main_skills=parsing_result["parsed_data"].get("main_skills", []),
