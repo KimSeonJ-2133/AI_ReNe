@@ -7,6 +7,7 @@ from core.database import Base
 # 구직자 테이블
 class Jobseeker(Base):
     __tablename__ = "jobseeker"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
@@ -36,6 +37,7 @@ class Jobseeker(Base):
 
 class Company(Base):
     __tablename__ = "company"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), nullable=False)
@@ -55,6 +57,7 @@ class Company(Base):
 
 class JobGroup(Base):
     __tablename__ = "job_group"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False) # FK 추가

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from src.models.user import Jobseeker
+from models import Jobseeker
 
 class JobseekerRepository:
     def __init__(self, db: Session):

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from src.models.user import Company
+from models import Company
 
 class CompanyRepository:
     def __init__(self, db: Session):
@@ -16,3 +16,6 @@ class CompanyRepository:
     
     def get_by_id(self, company_id: int) -> Company | None:
         return self.db.query(Company).filter(Company.id == company_id).first()
+    
+    def get_by_id(self, company_id: int) -> str:
+        
