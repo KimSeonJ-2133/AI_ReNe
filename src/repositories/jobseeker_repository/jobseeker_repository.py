@@ -19,3 +19,5 @@ class JobseekerRepository:
         """구직자 기본 정보 반환"""
         return self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
     
+    def get_info_by_id(self, jobseeker_id: int) -> str:
+        return ""

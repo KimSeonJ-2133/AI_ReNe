@@ -12,3 +12,7 @@ class PortfolioRepository:
         self.db.commit()
         self.db.refresh(portfolio)
         return portfolio
+
+    def get_full_text(self, jobseeker_id: int):
+        """포트폴리오 전체 텍스트 조회"""
+        return ""

@@ -12,3 +12,7 @@ class RecruitmentNoticeRepository:
         self.db.commit()
         self.db.refresh(recruitment_notice)
         return recruitment_notice
+    
+    def get_full_text(self, job_group_id: int):
+        """채용 공고문 전체 텍스트 조회"""
+        return ""

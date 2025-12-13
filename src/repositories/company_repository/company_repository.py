@@ -17,5 +17,5 @@ class CompanyRepository:
     def get_by_id(self, company_id: int) -> Company | None:
         return self.db.query(Company).filter(Company.id == company_id).first()
     
-    def get_by_id(self, company_id: int) -> str:
-        
+    def get_info_by_id(self, company_id: int) -> str:
+        return ""
