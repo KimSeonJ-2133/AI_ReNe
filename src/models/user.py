@@ -62,7 +62,6 @@ class JobGroup(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False) # FK 추가
     name = Column(String(100), nullable=False)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # 관계 설정(cascade 삭제 설정)
