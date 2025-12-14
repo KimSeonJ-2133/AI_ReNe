@@ -15,4 +15,10 @@ class CompanyIntroductionRepository:
 
     def get_full_text(self, company_id: int):
         """기업 소개서 전체 텍스트 조회"""
-        return ""
+        introduction = (
+            self.db.query(CompanyIntroduction)
+            .filter(CompanyIntroduction.company_id == company_id)
+            .order_by(CompanyIntroduction.created_at.desc())
+            .first()
+        )
+        return introduction.markdown_content if introduction else ""

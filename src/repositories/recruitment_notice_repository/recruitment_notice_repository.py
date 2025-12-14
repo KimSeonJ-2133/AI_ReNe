@@ -15,4 +15,10 @@ class RecruitmentNoticeRepository:
     
     def get_full_text(self, job_group_id: int):
         """채용 공고문 전체 텍스트 조회"""
-        return ""
+        jd = (
+            self.db.query(RecruitmentNotice)
+            .filter(RecruitmentNotice.job_group_id == job_group_id)
+            .order_by(RecruitmentNotice.created_at.desc())
+            .first()
+        )
+        return jd.markdown_content if jd else ""

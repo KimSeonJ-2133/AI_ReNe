@@ -17,5 +17,25 @@ class CompanyRepository:
     def get_by_id(self, company_id: int) -> Company | None:
         return self.db.query(Company).filter(Company.id == company_id).first()
     
-    def get_info_by_id(self, company_id: int) -> str:
-        return ""
+    def get_info_as_markdown(self, company_id: int) -> str:
+        """기업 기본 정보를 마크다운 텍스트로 변환하여 반환"""
+        company = (
+            self.db.query(Company)
+            .filter(Company.id == company_id)
+            .first()
+        )
+        
+        if not company:
+            return "기업 정보를 찾을 수 없습니다."
+        
+        scale = company.company_scale if company.company_scale else "정보 없음"        
+
+        markdown_text = f"""
+## 기업 기본 정보
+- **기업명**: {company.name}
+- **기업 규모**: {scale}
+- **사업자 번호**: {company.business_number}
+- **대표 이메일**: {company.email}
+- **주소**: {company.address}
+"""
+        return markdown_text.strip()

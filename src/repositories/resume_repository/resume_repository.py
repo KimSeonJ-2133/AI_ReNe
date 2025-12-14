@@ -19,4 +19,10 @@ class ResumeRepository:
     
     def get_full_text(self, jobseeker_id: int):
         """이력서 전체 텍스트 조회"""
-        return ""
+        resume = (
+            self.db.query(Resume)
+            .filter(Resume.jobseeker_id == jobseeker_id)
+            .order_by(Resume.created_at.desc())
+            .first()
+        )
+        return resume.markdown_content if resume else ""
