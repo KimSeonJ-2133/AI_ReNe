@@ -46,9 +46,9 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 @app.get("/")
 async def read_root():
     # FileResponse(파일경로) 형태로 작성
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return FileResponse(os.path.join(static_dir, "interview_test.html"))
 
 if __name__ == "__main__":
-    #init_db()
+    init_db()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 

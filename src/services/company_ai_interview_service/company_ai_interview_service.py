@@ -12,7 +12,7 @@ from src.repositories.recruitment_notice_repository.recruitment_notice_repositor
 from src.repositories.company_introduction_repository.company_introduction_repository import CompanyIntroductionRepository
 from src.repositories.jobseeker_repository.jobseeker_repository import JobseekerRepository
 from src.repositories.company_ai_interview_repository.company_ai_interview_repository import CompanyAIInterviewRepository
-from src.agents.company_ai_interview_graph import CompanyAIInterviewGraph
+from src.agents.company_ai_interview_graph import CompanyAIInterviewAgent
 from src.services.stt_service.faster_whisper_service import stt_service
 from src.services.tts_service.elevenlabs_tts_service import tts_service
 from src.utils.audio_file_utils import pcm_to_wav_bytes
@@ -31,7 +31,7 @@ class CompanyAIInterviewService:
         self.recruitment_notice_repo = RecruitmentNoticeRepository(db)
         self.interview_repo = CompanyAIInterviewRepository(db)
         self.session_repo = CompanyAIInterviewSessionRepository(db)
-        
+        self.agent = CompanyAIInterviewAgent()
     async def start_new_interview(self, request: company_ai_interview_request_dto.StartInterviewRequest) -> company_ai_interview_response_dto.InterviewResponse:
        
         # 1. DB에 세션 ID 생성 및 DB 레코드 선행 생성
@@ -50,12 +50,10 @@ class CompanyAIInterviewService:
         self.session_repo.create(new_session)
 
         # 2. 그래프 실행에 필요한 텍스트 데이터 조회
-        company_name = self.company_repo.get_name(request.company_id)
-        jobseeker_name = self.jobseeker_repo.get_name(request.jobseeker_id)
         
         context_data = {
-            "company_name": company_name,
-            "jobseeker_name": jobseeker_name,
+            "company_name": self.company_repo.get_name(request.company_id),
+            "jobseeker_name": self.jobseeker_repo.get_name(request.jobseeker_id),
             "company_info": self.company_repo.get_info_as_markdown(request.company_id),
             "jobseeker_info": self.jobseeker_repo.get_info_as_markdown(request.jobseeker_id),
             "resume_context": self.resume_repo.get_full_text(request.jobseeker_id),
@@ -77,7 +75,8 @@ class CompanyAIInterviewService:
             "red_flag_count": 0,
             "status": "interview",
             "messages": [], # 초기엔 빈 메시지 리스트
-            
+            "evaluation_history": [],
+
             # 컨텍스트 데이터 병합
             **context_data
         }
@@ -85,7 +84,7 @@ class CompanyAIInterviewService:
         # 4. 에이전트 실행 (첫 질문 생성)
         # session_id를 thread_id로 사용하여 메모리 설정
         try:
-            # Agent가 Interviewer 노드를 거쳐 첫 질문을 생성하고 멈춥니다.
+            # agent.start_interview 내부에서 interviewer_node -> END 까지 실행됨
             ai_state = await self.agent.start_interview(new_session_id, init_state)
         
         except Exception as e:
@@ -93,9 +92,9 @@ class CompanyAIInterviewService:
             new_session.status = "ERROR"
             self.session_repo.update(new_session)
             print(f"Error occurred during interview: {e}")
-            raise HTTPException(status_code=500, detail="면접 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+            raise HTTPException(status_code=500, detail="면접 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
 
-        # 5. Agent 실행 결과(첫 질문)를 DB에 업데이트
+        # 5. Agent 실행 결과(첫 질문) 결과 처리 및 DB 업데이트
         last_message_content = ""
         if ai_state.get("messages"):
             last_message = ai_state["messages"][-1] # LangChain Message 객체
@@ -103,10 +102,14 @@ class CompanyAIInterviewService:
             
             # DB의 chat_history(JSON)에 AI의 첫 질문 기록
             # LangGraph의 messages는 객체이므로 JSON 직렬화 가능한 dict로 변환해 저장해야 함
-            new_history = [
-                {"role": "ai", "content": last_message_content, "timestamp": str(datetime.now())}
-            ]
-            new_session.chat_history = new_history
+        new_history = [
+            {
+                "role": "ai", 
+                "content": last_message_content, 
+                "timestamp": str(datetime.now())
+            }
+        ]
+        new_session.chat_history = new_history
 
         # 세션 상태 동기화
         new_session.current_turn = ai_state.get("current_turn", 1)
@@ -156,14 +159,18 @@ class CompanyAIInterviewService:
                 ai_audio_base64=None
             )
         
-        # 2. LangGraph 실행
+        # 2. LangGraph 실행 (답변 주입 -> 평가 -> 질문 생성)
         try:
+            # 1) HumanMessage 주입 
+            # 2) invoke(None) -> start_route가 'strict_evaluator_node'로 보냄
+            # 3) Evaluator -> Interviewer -> END
             ai_state = await self.agent.process_answer(session_id, user_answer)
         except Exception as e:
             print(f"LangGraph 실행 실패: {e}")
             raise HTTPException(status_code=500, detail="AI 응답 생성 중 오류가 발생했습니다.")
         
         # 3. LangGraph 실행 결과를 DB에 업데이트
+
         # 3-1. 기존 기록 가져오기 (없으면 빈 리스트)
         current_history = session_record.chat_history if session_record.chat_history else []
         
@@ -179,12 +186,13 @@ class CompanyAIInterviewService:
         last_ai_message = ""
         if ai_state.get("messages"):
             last_ai_message = ai_state["messages"][-1].content
-            ai_entry = {
-                "role": "ai", 
-                "content": last_ai_message, 
-                "timestamp": str(datetime.now())
-            }
-            current_history.append(ai_entry)
+        
+        ai_entry = {
+            "role": "ai", 
+            "content": last_ai_message, 
+            "timestamp": str(datetime.now())
+        }
+        current_history.append(ai_entry)
 
         # 3-4. 변경된 리스트를 다시 할당 (SQLAlchemy 감지용)
         session_record.chat_history = list(current_history)
@@ -192,9 +200,9 @@ class CompanyAIInterviewService:
         # 4. 면접 종료 여부 확인 및 처리
         if ai_state.get("status") == "done":
             
-            print("면접 종료. 결과 저장 시작.")
+            print("면접 종료. 결과 저장 시작")
             
-            # 4-1세션 상태 업데이트
+            # 4-1 세션 상태 업데이트
             session_record.status = "COMPLETED"
             
             # 4-2. 결과 테이블(Result) 저장
@@ -207,50 +215,47 @@ class CompanyAIInterviewService:
             # 4-3. 트랜잭션 커밋
             self.session_repo.update(session_record) # update 내부에서 commit 수행
 
-            ai_audio_bytes = tts_service.speak(last_ai_message)
+            closing_ment = "면접이 모두 종료되었습니다. 수고하셨습니다."
+            ai_audio_bytes = tts_service.speak(closing_ment)
 
             ai_audio_base64 = None
             if ai_audio_bytes:
                 ai_audio_base64 = base64.b64encode(ai_audio_bytes).decode('utf-8')
 
             return company_ai_interview_response_dto.InterviewResponse(
-                message="200 OK, 인터뷰 완료.",
+                message="200 OK, 면접 완료.",
                 session_id=session_id,
                 current_turn=session_record.current_turn,
                 interview_stage="CLOSING",
-                ai_message="수고하셨습니다. 면접이 종료되었습니다.",
+                ai_message=closing_ment,
                 status="done",
                 ai_audio_base64=ai_audio_base64
             )
 
-        # 5. [Update Session] 진행 중 상태 업데이트
+        # 5. Update Session - 진행 중 상태 업데이트
         session_record.current_turn = ai_state.get("current_turn", session_record.current_turn)
         session_record.interview_stage = ai_state.get("interview_stage", session_record.interview_stage)
         
         # DB 저장
         self.session_repo.update(session_record)
 
-        # 6. [TTS] (Optional) 음성 변환
-        ai_audio_base64 = None
-        if last_ai_message:
-            try:
-                # TTS 서비스 호출 (비동기 처리가 가능하다면 더 좋음)
-                audio_bytes = tts_service.speak(last_ai_message)
-                if audio_bytes:
-                    ai_audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
-            except Exception as e:
-                print(f"⚠️ [TTS Error] {e}")
+        # 6. TTS - (Optional) 음성 변환
+        ai_audio_bytes = tts_service.speak(last_ai_message)
 
-        # 7. [Response] 결과 반환
+        ai_audio_base64 = None
+        if ai_audio_bytes:
+            ai_audio_base64 = base64.b64encode(ai_audio_bytes).decode('utf-8')
+
+        # 7. Response 결과 반환
         return company_ai_interview_response_dto.InterviewResponse(
+            message="200 OK, 인터뷰 진행 중.",
             session_id=session_id,
             current_turn=session_record.current_turn,
             interview_stage=session_record.interview_stage,
-            message=last_ai_message, # AI의 질문 내용
+            ai_message=last_ai_message, # AI의 질문 내용
             status="interview",
-            audio_base64=ai_audio_base64
+            ai_audio_base64=ai_audio_base64
         )
-
 
 
     # 사용자의 음성파일을 받아 STT 실행 후 process_user_answer를 재호출하고 DB에 업데이트
