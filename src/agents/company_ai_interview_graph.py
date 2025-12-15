@@ -100,7 +100,7 @@ class CompanyAIInterviewAgent:
         system_prompt = self._load_prompt("company_ai_interview_prompt_ver2.0.md")
         current_turn = state.get("current_turn", 0)
         eval_history = state.get("evaluation_history", [])
-        
+        print(f"현재 턴수 : {current_turn}")
         # 스테이지 결정 로직
         current_stage = state.get("interview_stage", "INTRO")
         if current_turn <= 1:
