@@ -27,7 +27,7 @@ def parse_jd_with_llm(text_content: str, file_type: str = "text") -> Dict[str, A
     """
     # LLM 초기화
     llm = ChatOpenAI(
-        model = "gpt-4o-mini",
+        model = "gpt-4.1-mini",
         temperature = 0.1,
         api_key = settings.OPENAI_API_KEY
     )

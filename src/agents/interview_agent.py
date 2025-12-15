@@ -20,12 +20,12 @@ class InterviewAgent:
 
         # LLM 초기화 (JSON 출력을 위해 모델 분리 기능)
         self.llm = ChatOpenAI(
-            model="gpt-4o",
+            model="gpt-4.1",
             temperature=0.7,  # 확인 필요
             openai_api_key=settings.OPENAI_API_KEY,
         )
         self.json_llm = ChatOpenAI(
-            model="gpt-4o", temperature=0.1, model_kwargs={"response_format": {"type": "json_object"}}
+            model="gpt-4.1", temperature=0.1, model_kwargs={"response_format": {"type": "json_object"}}
         )
 
     def _load_prompt(self, filename: str) -> str:

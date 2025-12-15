@@ -1,0 +1,152 @@
+========================================================================
+[이력서/포트폴리오] 언리얼 엔진 클라이언트 개발자 - 박민준
+========================================================================
+
+1. 기본 정보
+------------------------------------------------------------------------
+- 이름: 박민준 (Park Min-jun)
+- 경력: 8년 2개월 (2017.03 ~ 현재)
+- 이메일: minjun.park88@devmail.net
+- 연락처: 010-9876-5432
+- 주소: 경기도 성남시 분당구 판교역로
+- 링크: 
+  - GitHub: https://github.com/minjun-ue-dev (엔진 소스 분석 및 개인 플러그인)
+  - TechBlog: https://blog.naver.com/ue-deep-dive (최적화 사례 연재 중)
+
+2. 전문 요약 (Professional Summary)
+------------------------------------------------------------------------
+언리얼 엔진(UE4/UE5) 기반의 대규모 MMORPG 및 콘솔 액션 게임 개발 경력 8년 차 개발자입니다.
+단순한 콘텐츠 구현을 넘어, 엔진 코어 레벨의 프로파일링과 최적화, 그리고 대규모 트래픽 처리를 위한 네트워크 아키텍처 설계에 강점이 있습니다.
+최근에는 UE5의 Nanite/Lumen을 활용한 차세대 그래픽 파이프라인 최적화와 멀티스레드 렌더링 효율화 작업에 집중하고 있습니다.
+기획자와 아티스트를 위한 생산성 도구(Editor Utility) 개발 경험도 풍부하여 팀 전체의 파이프라인 효율을 높이는 데 기여합니다.
+
+3. 기술 스택 (Technical Skills)
+------------------------------------------------------------------------
+[Languages]
+- C++ (Modern C++ 14/17/20): STL, Template Meta-programming, Memory Management
+- Python: 언리얼 에디터 자동화 스크립트 작성, Build Pipeline 구축
+- C#: Tools 개발 및 .NET 연동
+
+[Unreal Engine]
+- Core Framework: UObject 아키텍처, GC 내부 동작 이해, Reflection System 활용
+- Gameplay: GAS (Gameplay Ability System) 아키텍처 설계 및 확장
+- Rendering: Material Shader (HLSL), Niagara VFX System, Slate UI Framework
+- Physics: PhysX (UE4) / Chaos Physics (UE5) 물리 시뮬레이션 제어
+
+[Network & Server]
+- Architecture: Dedicated Server, Replication Graph, Server-Client Prediction
+- Optimization: Network Bandwidth Optimization, Packet Interleaving
+
+[Tools & DevOps]
+- IDE: Visual Studio, Rider, Visual Studio Code
+- Version Control: Perforce (P4), Git (Git Flow)
+- Profiling: Unreal Insights, RenderDoc, Intel VTune
+- CI/CD: Jenkins, TeamCity (빌드 자동화 및 배포 파이프라인 구축)
+
+4. 경력 기술 (Work Experience)
+------------------------------------------------------------------------
+
+(1) 넥스트 호라이즌 게임즈 (Next Horizon Games)
+- 기간: 2021.04 ~ 현재 (재직 중)
+- 직책: 클라이언트 선임 연구원 (Senior Client Programmer)
+- 주요 업무: 차세대 PC/Console 오픈월드 MMORPG 'Project Aether' 코어 시스템 개발
+
+(2) 블루 웨이브 스튜디오 (Blue Wave Studio)
+- 기간: 2018.06 ~ 2021.03 (2년 9개월)
+- 직책: 클라이언트 프로그래머 (Mid-level)
+- 주요 업무: 모바일 액션 RPG 'Blade of Glory' 전투 시스템 및 최적화
+
+(3) 스타트업 픽셀 (Startup Pixel)
+- 기간: 2017.03 ~ 2018.05 (1년 2개월)
+- 직책: 주니어 프로그래머
+- 주요 업무: 하이퍼 캐주얼 게임 3종 출시, UI/UX 및 인앱 결제 구현
+
+5. 주요 프로젝트 경험 (Project Experience)
+------------------------------------------------------------------------
+
+[Project 1] 대규모 오픈월드 MMORPG 'Project Aether' (PC/Console)
+- 소속: 넥스트 호라이즌 게임즈
+- 인원: 150명 (프로그램팀 40명)
+- 엔진: Unreal Engine 5.1 -> 5.3 마이그레이션
+
+[담당 역할: 심리스 월드 스트리밍 및 네트워크 최적화]
+1. World Partition 기반 레벨 스트리밍 최적화
+   - 기존 World Composition 방식에서 UE5 World Partition으로 전환하며 HLOD 생성 파이프라인 구축.
+   - 데이터 레이어(Data Layer)를 활용하여 게임플레이 상황(전투/탐험)에 따라 동적으로 에셋을 로드/언로드하는 시스템 설계.
+
+2. 대규모 다중 접속 네트워크 동기화 (Replication Graph)
+   - 문제 상황: 100vs100 공성전 테스트 시, 기존 Grid 방식의 리플리케이션으로는 서버 프레임이 15fps까지 저하되는 현상 발생.
+   - 기술적 해결: UReplicationGraph를 상속받아 커스텀 노드를 구현. 
+     (1) 플레이어 시야각(FOV) 기반 우선순위 배분 로직 추가.
+     (2) 정적 오브젝트와 동적 오브젝트의 업데이트 주기를 분리하여 대역폭 사용량 40% 절감.
+   - 결과: 200명 동시 전투 상황에서도 서버 틱 레이트 30Hz 방어 성공.
+
+3. 애니메이션 시스템 최적화 (Animation Budget Allocator)
+   - 군중 처리를 위해 Animation Budget Allocator를 도입, 거리에 따라 본(Bone) 업데이트 빈도를 조절.
+   - 중요도가 낮은 NPC는 포즈 캐싱(Pose Caching)을 적용하여 GameThread 비용 2.5ms 절감.
+
+------------------------------------------------------------------------
+
+[Project 2] 사내 공용 플러그인 'NH_Tools' 개발 및 배포
+- 소속: 넥스트 호라이즌 게임즈 (R&D TF팀 겸직)
+- 주요 내용: 아티스트와 기획자의 반복 작업을 줄이기 위한 에디터 유틸리티 개발
+
+[담당 역할: 에디터 확장 및 자동화 툴 제작]
+1. 에셋 유효성 검사 자동화 (Asset Validator)
+   - Python Scripting을 활용하여 커밋 시점에 텍스처 사이즈(NPOT 체크), 머티리얼 복잡도, 스태틱 메시의 콜리전 유무를 자동 검사하는 Pre-commit Hook 구현.
+   - 잘못된 에셋의 업로드를 원천 차단하여 빌드 안정성 확보.
+
+2. 절차적 배치를 위한 PCG 툴 제작 (Blutility)
+   - Editor Utility Widget(EUW)을 활용하여, 기획자가 스플라인(Spline)만 그리면 도로와 가로등, 펜스가 자동으로 배치되고 스냅되는 레벨 디자인 툴 개발.
+   - 레벨 디자이너의 배경 배치 작업 시간 약 60% 단축.
+
+------------------------------------------------------------------------
+
+[Project 3] 모바일 액션 RPG 'Blade of Glory'
+- 소속: 블루 웨이브 스튜디오
+- 엔진: Unreal Engine 4.26
+
+[담당 역할: 전투 시스템(GAS) 및 모바일 최적화]
+1. GAS (Gameplay Ability System) 도입 및 프레임워크 구축
+   - 기존 하드코딩된 스킬 로직을 GAS로 리팩토링하여 확장성 확보.
+   - GameplayTag를 활용한 상태 제어(스턴, 무적, 침묵 등) 시스템 설계로 상태 이상 간의 복잡한 상호작용 로직을 데이터 주도적(Data-Driven)으로 관리 가능하게 변경.
+   - AttributeSet을 커스터마이징하여 데미지 공식 처리 로직을 중앙화하고, 기획자가 엑셀(CSV)로 수치를 조절하면 즉시 반영되도록 파이프라인 구축.
+
+2. 모바일 메모리 및 발열 관리
+   - 문제 상황: 저사양 기기(갤럭시 S9급)에서 장시간 플레이 시 발열로 인한 스로틀링 및 크래시 빈번 발생.
+   - 분석: LLM(Low Level Memory) Tracker와 Unreal Insights로 분석 결과, UI 텍스처와 파티클 시스템에서 메모리 누수 확인.
+   - 기술적 해결:
+     (1) 텍스처 스트리밍 풀 사이즈 조정 및 UI 아틀라스(Atlas) 최적화.
+     (2) Niagara 파티클의 이미터(Emitter) 수를 디바이스 등급별로 LOD 처리하는 매니저 클래스 구현.
+     (3) Object Pooling 시스템을 전면 재작성하여 액터 생성/파괴 비용 최소화.
+   - 결과: 크래시 비율 90% 감소 및 평균 FPS 45 -> 55 프레임 안정화.
+
+------------------------------------------------------------------------
+
+[Project 4] 하이퍼 캐주얼 게임 'Jump & Run'
+- 소속: 스타트업 픽셀
+- 엔진: Unreal Engine 4.18
+
+[담당 역할: 게임플레이 로직 및 UI]
+1. UI/UX 구현 (UMG)
+   - UMG와 C++ 바인딩을 통해 인벤토리, 상점, 랭킹 시스템 구현.
+   - 비동기 이미지 로딩 처리를 통해 스크롤 시 렉 현상 방지.
+
+2. Google Play Service 연동
+   - 안드로이드 JNI 호출을 통해 인앱 결제(IAP) 및 리더보드 기능 연동.
+   - 저장 데이터를 JSON 직렬화하여 로컬 및 클라우드에 저장하는 SaveGame 시스템 구현.
+
+6. 교육 및 기타 활동 (Education & Others)
+------------------------------------------------------------------------
+- 학력: 한국대학교 컴퓨터공학과 졸업 (2013.03 ~ 2017.02) / 학점 3.8
+- 자격증: 정보처리기사 (2016)
+- 발표: 'Unreal Summit 2023' 세션 발표 - "대규모 MMORPG에서의 리플리케이션 그래프 적용 사례"
+- 오픈소스 기여: 언리얼 엔진 공식 GitHub 저장소에 엔진 크래시 픽스 PR 2건 Merge 됨 (PhysX 관련)
+
+7. 자기소개 (Technical Philosophy)
+------------------------------------------------------------------------
+[Why, not just How]
+기능을 구현하는 방법(How)을 아는 것은 기본입니다. 저는 "왜(Why) 이 기술을 사용해야 하는가?"를 항상 고민합니다. GAS를 도입할 때도 단순히 유행이라서가 아니라, 수백 개의 스킬 데이터 관리가 불가능해지는 임계점을 예측하고 데이터 주도적 설계를 위해 도입했습니다.
+
+[Data-Oriented Mindset]
+직감에 의존한 최적화를 지양합니다. 항상 프로파일러(Insights, RenderDoc)를 통해 병목 지점을 수치로 확인한 뒤 작업에 착수하며, 최적화 전후의 지표를 기록하여 성과를 증명하는 것을 원칙으로 합니다.

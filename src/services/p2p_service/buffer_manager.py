@@ -98,4 +98,35 @@ class P2PBufferManager:
         if os.path.exists(session_dir):
             shutil.rmtree(session_dir)
 
+    def set_session_user(self, session_id: str, username: str):
+        """세션에 매핑된 사용자 ID 저장"""
+        meta_path = self._get_meta_path(session_id)
+        data = {}
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                pass
+        
+        # 이미 설정되어 있고 변경되지 않았다면 저장 생략 (I/O 최적화)
+        if data.get("username") == username:
+            return
+
+        data["username"] = username
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+
+    def get_session_user(self, session_id: str) -> Optional[str]:
+        """세션에 매핑된 사용자 ID 조회"""
+        meta_path = self._get_meta_path(session_id)
+        if not os.path.exists(meta_path):
+            return None
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("username")
+        except Exception:
+            return None
+
 buffer_manager = P2PBufferManager()

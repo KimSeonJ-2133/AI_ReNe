@@ -64,7 +64,7 @@ def test_analyze_interview_transcript(sample_candidate_profile, sample_interview
     result = analyze_interview_transcript(
         candidate_profile = sample_candidate_profile,
         interview_transcript = sample_interview_transcript,
-        model = "gpt-4o"
+        model = "gpt-4.1"
     )
     
     # 결과 검증

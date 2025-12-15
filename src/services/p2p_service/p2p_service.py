@@ -26,11 +26,21 @@ except Exception as e:
 # 단일 세션용 상수 ID
 DEFAULT_SESSION_ID = "single_session_v1"
 
-async def process_p2p_audio_chunk(audio_file: UploadFile, speaker_role: str) -> P2PChunkResponseDto:
+async def process_p2p_audio_chunk(
+    audio_file: UploadFile, 
+    speaker_role: str,
+    username: str = None
+) -> P2PChunkResponseDto:
     """
     [P2P] 오디오 청크를 받아 동적 버퍼링 및 STT 처리
+    Args:
+        username: 파일명에서 추출한 사용자 식별자 (예: jobplz)
     """
     session_id = DEFAULT_SESSION_ID
+    
+    # Username이 전달되면 BufferManager에 저장 (세션별 사용자 매핑)
+    if username:
+        buffer_manager.set_session_user(session_id, username)
     
     if not stt_service:
         raise HTTPException(status_code=500, detail="STT Service is not available")
@@ -92,55 +102,110 @@ async def finalize_p2p_interview() -> str:
                 buffer_manager.save_transcript(session_id, last_speaker, transcribed_text)
 
     # 1. 구직자 프로필 구성 (DB 연동)
-    target_jobseeker_id = 2  # 하드코딩: ID 2번 구직자
+    # 세션에 저장된 username(email)을 가져와서 구직자 조회
+    session_username = buffer_manager.get_session_user(session_id)
+    
     candidate_profile = {
-        "user_id": str(target_jobseeker_id),
+        "user_id": "Unknown",
         "name": "Unknown",
         "skills": [],
-        "portfolio_markdown": "" # 포트폴리오 마크다운 내용 추가
+        "portfolio_markdown": "" 
     }
     
     db = SessionLocal()
     try:
-        # ID로 직접 조회
-        jobseeker = db.query(Jobseeker).filter(Jobseeker.id == target_jobseeker_id).first()
-        
+        jobseeker = None
+        if session_username:
+            # 이메일(username)로 구직자 조회
+            jobseeker = db.query(Jobseeker).filter(Jobseeker.email == session_username).first()
+            if not jobseeker:
+                print(f"[P2P Service] 해당 이메일의 구직자를 찾을 수 없습니다: {session_username}")
+        else:
+            # Fallback: 하드코딩된 ID (테스트용)
+            target_jobseeker_id = 2
+            jobseeker = db.query(Jobseeker).filter(Jobseeker.id == target_jobseeker_id).first()
+            print(f"[P2P Service] 세션 유저 정보가 없어 기본 ID({target_jobseeker_id})로 조회합니다.")
+
         if jobseeker:
+            candidate_profile["user_id"] = str(jobseeker.id)
             candidate_profile["name"] = jobseeker.name
             
-            # 가장 최근 포트폴리오 조회
+            # 가장 최근 포트폴리오 및 이력서 조회
             portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == jobseeker.id).order_by(Portfolio.created_at.desc()).first()
+            resume = db.query(Resume).filter(Resume.jobseeker_id == jobseeker.id).order_by(Resume.created_at.desc()).first()
             
-            if portfolio:
-                # 마크다운 내용 가져오기 (필수)
-                if portfolio.markdown_content:
-                    candidate_profile["portfolio_markdown"] = portfolio.markdown_content
-                    print(f"[P2P Service] 포트폴리오 마크다운 로드 완료 (길이: {len(portfolio.markdown_content)})")
-                else:
-                    print(f"[P2P Service] 포트폴리오 마크다운 내용이 비어있습니다. (User ID: {target_jobseeker_id})")
+            # 구조화된 요약 생성
+            summary_parts = []
+            
+            # 1. Skills (Portfolio 우선, 없으면 Resume)
+            skills_list = []
+            if portfolio and portfolio.main_skills:
+                skills_list = portfolio.main_skills
+            elif resume and resume.skills:
+                skills_list = resume.skills
                 
-                # skills 파싱 로직 복구 (main_skills가 있으면 사용)
-                if portfolio.main_skills:
-                    skills_data = portfolio.main_skills
-                    if isinstance(skills_data, list):
-                        for skill in skills_data:
-                            # 스킬 데이터 정규화
-                            tech_keyword = skill.get("tech_keyword") or skill.get("name") or "Unknown"
-                            level_str = skill.get("level") or skill.get("current_level") or "Lv.1"
-                            
-                            # 레벨 파싱 (Lv.3 -> 3)
-                            import re
-                            level_match = re.search(r'\d+', str(level_str))
-                            current_level = int(level_match.group()) if level_match else 1
-                            
-                            candidate_profile["skills"].append({
-                                "tech_keyword": tech_keyword,
-                                "current_level": current_level,
-                                "context": skill.get("context") or skill.get("description") or ""
-                            })
+            if skills_list:
+                # 문자열 리스트인 경우와 객체 리스트인 경우 모두 처리
+                normalized_skills = []
+                for s in skills_list:
+                    if isinstance(s, str):
+                        normalized_skills.append(s)
+                    elif isinstance(s, dict):
+                        normalized_skills.append(s.get("tech_keyword") or s.get("name") or str(s))
+                
+                summary_parts.append(f"# [Skills]\n- {', '.join(normalized_skills)}")
+                
+                # candidate_profile["skills"] 업데이트 (기존 로직 호환성 유지)
+                # 문자열 리스트를 객체 형태로 변환하여 저장
+                for s in normalized_skills:
+                    candidate_profile["skills"].append({
+                        "tech_keyword": s,
+                        "current_level": 1, # 기본값
+                        "context": ""
+                    })
 
+            # 2. Projects (Portfolio)
+            if portfolio and portfolio.project_details:
+                projects_str = ["# [Key Projects]"]
+                for idx, proj in enumerate(portfolio.project_details, 1):
+                    if isinstance(proj, dict):
+                        name = proj.get("project_name", "Unknown Project")
+                        role = proj.get("position", "")
+                        desc = proj.get("description", "")
+                        projects_str.append(f"{idx}. {name} ({role})\n   - {desc}")
+                if len(projects_str) > 1:
+                    summary_parts.append("\n".join(projects_str))
+
+            # 3. Experience (Resume)
+            if resume and resume.work_experience:
+                exp_str = ["# [Experience]"]
+                for idx, exp in enumerate(resume.work_experience, 1):
+                    if isinstance(exp, dict):
+                        company = exp.get("company_name", "Unknown Company")
+                        role = exp.get("role", "")
+                        period = exp.get("period", "")
+                        exp_str.append(f"{idx}. {company} ({role}) | {period}")
+                if len(exp_str) > 1:
+                    summary_parts.append("\n".join(exp_str))
+            
+            # 4. Education (Resume)
+            if resume and resume.education:
+                edu_str = ["# [Education]"]
+                for edu in resume.education:
+                    edu_str.append(f"- {edu}")
+                if len(edu_str) > 1:
+                    summary_parts.append("\n".join(edu_str))
+
+            # 요약본 저장 (없으면 기존 마크다운 사용)
+            if summary_parts:
+                candidate_profile["portfolio_summary"] = "\n\n".join(summary_parts)
+                print(f"[P2P Service] 구조화된 요약 생성 완료 (길이: {len(candidate_profile['portfolio_summary'])})")
+            elif portfolio and portfolio.markdown_content:
+                candidate_profile["portfolio_summary"] = portfolio.markdown_content
+                print("[P2P Service] 구조화된 데이터가 없어 원본 마크다운을 사용합니다.")
             else:
-                print(f"[P2P Service] 포트폴리오를 찾을 수 없습니다. (User ID: {target_jobseeker_id})")
+                candidate_profile["portfolio_summary"] = "No portfolio data available."
+
         else:
             print(f"[P2P Service] 구직자를 찾을 수 없습니다. (User ID: {target_jobseeker_id})")
             
@@ -149,10 +214,10 @@ async def finalize_p2p_interview() -> str:
     finally:
         db.close()
         
-    # Fallback: 마크다운이 없는 경우에만 더미 데이터 사용
-    if not candidate_profile["portfolio_markdown"]:
-        print("[P2P Service] 포트폴리오 마크다운을 가져오지 못해 더미 데이터를 사용합니다.")
-        candidate_profile["portfolio_markdown"] = """
+    # Fallback: 요약본이 없는 경우 더미 데이터
+    if not candidate_profile.get("portfolio_summary"):
+        print("[P2P Service] 포트폴리오 데이터를 가져오지 못해 더미 데이터를 사용합니다.")
+        candidate_profile["portfolio_summary"] = """
 # [Basic Information]
 - **Name:** Unknown
 - **Summary:** No portfolio data available.
@@ -160,7 +225,7 @@ async def finalize_p2p_interview() -> str:
         # skills는 사용하지 않으므로 비워둠
         candidate_profile["skills"] = []
 
-    print(f"[P2P Service] Candidate Profile: {candidate_profile}")
+    print(f"[P2P Service] Candidate Profile Summary Length: {len(candidate_profile['portfolio_summary'])}")
 
     # 2. 전체 대화록 구성 (BufferManager에서 가져오기)
     full_transcript = buffer_manager.get_full_transcript(session_id)
@@ -195,3 +260,11 @@ async def finalize_p2p_interview() -> str:
 
     # PDF 생성이 안된 경우 (예외 처리)
     raise HTTPException(status_code=500, detail="Failed to generate PDF report")
+
+def reset_p2p_session():
+    """
+    [P2P] 세션 데이터 초기화 (새로운 면접 시작 전 호출)
+    """
+    session_id = DEFAULT_SESSION_ID
+    buffer_manager.clear_session(session_id)
+    print(f"[P2P Service] Session {session_id} has been reset.")
