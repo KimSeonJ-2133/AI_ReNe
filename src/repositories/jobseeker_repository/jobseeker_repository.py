@@ -19,6 +19,10 @@ class JobseekerRepository:
         """구직자 기본 정보 반환"""
         return self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
     
+    def get_name(self, jobseeker_id: int) -> str:
+        jobseeker = self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
+        return jobseeker.name
+    
     def get_info_as_markdown(self, jobseeker_id: int) -> str:
         js = (
             self.db.query(Jobseeker)

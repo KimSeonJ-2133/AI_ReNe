@@ -5,7 +5,8 @@ from .user import (
     JobGroup
 )
 from .interview import (
-    CompanyAIInterview, 
+    CompanyAIInterview,
+    CompanyAIInterviewSession, 
     NonContactInterview,
     ReneInterview,
     BeginningReneDetail,

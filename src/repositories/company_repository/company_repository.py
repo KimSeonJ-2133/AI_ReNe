@@ -17,6 +17,10 @@ class CompanyRepository:
     def get_by_id(self, company_id: int) -> Company | None:
         return self.db.query(Company).filter(Company.id == company_id).first()
     
+    def get_name(self, company_id: int) -> str:
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        return company.name
+    
     def get_info_as_markdown(self, company_id: int) -> str:
         """기업 기본 정보를 마크다운 텍스트로 변환하여 반환"""
         company = (

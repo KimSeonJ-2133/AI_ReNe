@@ -1,17 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from api.deps import get_db
-from src.services.trials_rene_service.trials_rene_service import TrialsReneService
-from src.schemas.trials_rene_schemas import trials_rene_request_dto, trials_rene_response_dto
+from src.services.company_ai_interview_service.company_ai_interview_service import CompanyAIInterviewService
+from src.schemas.company_ai_interview_schemas import company_ai_interview_request_dto, company_ai_interview_response_dto
 
-trials_rene_router = APIRouter(prefix="/rene/trials", tags=["Trials Rene"])
+router = APIRouter(prefix="/company/ai-interview", tags=["Company AI Interview"])
 
-@trials_rene_router.post("/voice-chat", response_model=trials_rene_response_dto)
-def trials_rene_voice_chat(
-        request: trials_rene_request_dto,
+@router.post("/start", response_model=company_ai_interview_response_dto.InterviewResponse)
+async def start_interview(
+        request: company_ai_interview_request_dto.StartInterviewRequest,
         db: Session = Depends(get_db)
 ):
-    trials_rene_service = TrialsReneService(db)
-    return trials_rene_service.voice_chat(request)
+    """
+    기업 AI 면접을 시작합니다.
+    """
+    service = CompanyAIInterviewService(db)
+    return await service.start_new_interview(request)
+
+@router.post("/chat/voice", response_model=company_ai_interview_response_dto.InterviewResponse)
+async def chat_interview(
+    # JSON DTO 대신 Form 데이터로 개별 필드를 받습니다.
+    session_id: str = Form(..., description="면접 세션 ID"),
+    file: UploadFile = File(..., description="사용자 음성 답변 파일"),
+    db: Session = Depends(get_db)
+):
+    """
+    [음성] 사용자의 음성 답변을 받아 STT -> Agent -> TTS로 답변을 제출하고 
+    다음 면접관의 반응을 음성으로 보냅니다.
+    """
+    service = CompanyAIInterviewService(db)
+    return await service.process_voice_answer(session_id, file)
+

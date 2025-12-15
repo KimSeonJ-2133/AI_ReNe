@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
 from rene_interview import rene_router
 from p2p_interview_api import p2p_router
 from auth import auth_router
+import company_ai_interview_api
 from upload_api import upload_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +21,7 @@ app.include_router(rene_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(p2p_router, prefix="/api/v1")
 app.include_router(upload_router, prefix="/api/v1")
+app.include_router(company_ai_interview_api.router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +33,7 @@ app.add_middleware(
 
 def init_db():
     print("DB 초기화 스크립트 실행...")
-    Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
+    #Base.metadata.drop_all(bind=engine) # 기존 거 싹 지우고 다시 만들려면 주석 해제
     Base.metadata.create_all(bind=engine) # DB 생성
     print("모든 테이블이 생성되었습니다.")
 
@@ -47,6 +49,6 @@ async def read_root():
     return FileResponse(os.path.join(static_dir, "index.html"))
 
 if __name__ == "__main__":
-    init_db()
+    #init_db()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 

@@ -15,6 +15,7 @@ class CompanyAIInterviewRepository:
             interview = CompanyAIInterview(
                 jobseeker_id=interview_data["jobseeker_id"],
                 job_group_id=interview_data["job_group_id"],
+                session_id=interview_data["session_id"],
                 report=interview_data["report"],
                 summary=interview_data["summary"],
                 total_score=interview_data["total_score"],

@@ -1,3 +1,0 @@
-
-class CompanyAIInterviewService:
-    pass
