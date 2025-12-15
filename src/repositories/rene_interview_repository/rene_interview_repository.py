@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from models import ReneInterview
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.interview import ReneInterview
 
 class ReneInterviewRepository:
     def __init__(self, db: Session):

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from models import RecruitmentNotice
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.document import RecruitmentNotice
 import uuid
 
 class RecruitmentNoticeRepository:
@@ -12,3 +14,13 @@ class RecruitmentNoticeRepository:
         self.db.commit()
         self.db.refresh(recruitment_notice)
         return recruitment_notice
+    
+    def get_full_text(self, job_group_id: int):
+        """채용 공고문 전체 텍스트 조회"""
+        jd = (
+            self.db.query(RecruitmentNotice)
+            .filter(RecruitmentNotice.job_group_id == job_group_id)
+            .order_by(RecruitmentNotice.created_at.desc())
+            .first()
+        )
+        return jd.markdown_content if jd else ""

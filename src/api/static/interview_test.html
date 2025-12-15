@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 면접 서비스 테스트</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* 설정 섹션 */
+        .config-box { border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: inline-block; width: 120px; font-weight: bold; }
+        input { padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        /* 채팅 영역 */
+        #chat-window { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; margin-bottom: 20px; border-radius: 5px; }
+        .message { margin-bottom: 10px; padding: 10px; border-radius: 10px; max-width: 80%; line-height: 1.4; }
+        .message.ai { background-color: #e3f2fd; align-self: flex-start; margin-right: auto; }
+        .message.user { background-color: #ffe0b2; align-self: flex-end; margin-left: auto; text-align: right; }
+        .message strong { display: block; margin-bottom: 5px; font-size: 0.9em; color: #555; }
+        
+        /* 컨트롤 영역 */
+        .controls { display: flex; gap: 10px; align-items: center; justify-content: center; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-start { background-color: #4CAF50; color: white; }
+        .btn-record { background-color: #f44336; color: white; }
+        .btn-record:disabled { background-color: #ccc; }
+        .btn-record.recording { background-color: #b71c1c; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        #status-text { text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎤 AI 면접 서비스 테스트</h2>
+    
+    <div class="config-box">
+        <div class="input-group">
+            <label>API URL:</label>
+            <input type="text" id="api-url" value="http://localhost:8000/api/v1/company/ai-interview" style="width: 250px;">
+        </div>
+        <div class="input-group">
+            <label>Jobseeker ID:</label>
+            <input type="number" id="jobseeker-id" value="1">
+        </div>
+        <div class="input-group">
+            <label>Company ID:</label>
+            <input type="number" id="company-id" value="1">
+        </div>
+        <div class="input-group">
+            <label>Job Group ID:</label>
+            <input type="number" id="job-group-id" value="1">
+        </div>
+        <div style="margin-top: 10px;">
+            <button class="btn-start" onclick="startInterview()">면접 시작 (Start Interview)</button>
+        </div>
+    </div>
+
+    <div id="chat-window">
+        <div style="text-align: center; color: #aaa; margin-top: 150px;">
+            면접 시작 버튼을 눌러주세요.
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="record-btn" class="btn-record" onclick="toggleRecording()" disabled>
+            🎤 답변 녹음 시작
+        </button>
+    </div>
+    <div id="status-text">대기 중...</div>
+</div>
+
+<script>
+    let sessionId = null;
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // API 호출 헬퍼
+    const getApiUrl = () => document.getElementById('api-url').value;
+
+    // 1. 면접 시작
+    async function startInterview() {
+        const jobseekerId = document.getElementById('jobseeker-id').value;
+        const companyId = document.getElementById('company-id').value;
+        const jobGroupId = document.getElementById('job-group-id').value;
+
+        const payload = {
+            jobseeker_id: parseInt(jobseekerId),
+            company_id: parseInt(companyId),
+            job_group_id: parseInt(jobGroupId)
+        };
+
+        logStatus("면접 세션 생성 중...");
+        
+        try {
+            const response = await fetch(`${getApiUrl()}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(await response.text());
+
+            const data = await response.json();
+            sessionId = data.session_id;
+
+            // UI 초기화
+            document.getElementById('chat-window').innerHTML = '';
+            document.getElementById('record-btn').disabled = false;
+            
+            // AI 메시지 처리
+            handleAiResponse(data);
+            logStatus("면접이 시작되었습니다. 답변하려면 녹음 버튼을 누르세요.");
+
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+            logStatus("시작 실패");
+        }
+    }
+
+    // 2. 녹음 토글 (시작/중지)
+    async function toggleRecording() {
+        if (!isRecording) {
+            // 녹음 시작
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream); // 브라우저 기본 포맷(webm/ogg)
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    // 녹음이 멈추면 파일 생성 및 전송
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // 백엔드는 형식을 크게 가리지 않을 수 있음 (ffmpeg가 처리한다면)
+                    sendVoiceAnswer(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                updateRecordButton(true);
+                logStatus("녹음 중... 답변이 끝나면 버튼을 다시 누르세요.");
+            } catch (err) {
+                console.error("마이크 접근 실패:", err);
+                alert("마이크 접근 권한이 필요합니다.");
+            }
+        } else {
+            // 녹음 중지
+            mediaRecorder.stop();
+            isRecording = false;
+            updateRecordButton(false);
+            logStatus("답변 전송 중...");
+        }
+    }
+
+    // 3. 음성 답변 전송
+    async function sendVoiceAnswer(audioBlob) {
+        if (!sessionId) {
+            alert("세션이 없습니다.");
+            return;
+        }
+
+        // FormData 생성
+        const formData = new FormData();
+        formData.append("session_id", sessionId);
+        // 파일명에 확장자 .webm을 붙여줍니다. (백엔드에서 pcm/wav 변환 로직이 있다면 주의)
+        formData.append("file", audioBlob, "answer.webm"); 
+
+        try {
+            const response = await fetch(`${getApiUrl()}/chat/voice`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error(await response.text());
+
+            const data = await response.json();
+            
+            // 사용자가 방금 말한 내용을 텍스트로 채팅창에 추가 (STT 결과가 있다고 가정하거나 UI적 처리)
+            // 현재 Response DTO에는 User STT 텍스트가 명시적으로 없지만, 
+            // 만약 백엔드에서 history를 보내주거나, 사용자가 말한 내용을 UI에 띄우고 싶다면 
+            // 백엔드 Response에 'user_stt_text' 같은 필드를 추가하는 것이 좋습니다.
+            // 여기서는 단순히 "음성 답변 전송됨"으로 표시하거나 AI 반응만 보여줍니다.
+            addMessage("User", "🎤 (음성 답변 전송됨)");
+
+            handleAiResponse(data);
+
+            if (data.status === 'done') {
+                logStatus("면접이 종료되었습니다.");
+                document.getElementById('record-btn').disabled = true;
+            } else {
+                logStatus("답변 대기 중...");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("전송 실패: " + error.message);
+            logStatus("전송 오류 발생");
+        }
+    }
+
+    // 4. AI 응답 처리 (텍스트 출력 + 오디오 재생)
+    function handleAiResponse(data) {
+        // 텍스트 출력
+        if (data.ai_message) {
+            addMessage("Interviewer (AI)", data.ai_message);
+        }
+
+        // 오디오 재생
+        if (data.ai_audio_base64) {
+            playBase64Audio(data.ai_audio_base64);
+        }
+    }
+
+    function addMessage(sender, text) {
+        const chatWindow = document.getElementById('chat-window');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender === 'User' ? 'user' : 'ai'}`;
+        msgDiv.innerHTML = `<strong>${sender}</strong>${text}`;
+        chatWindow.appendChild(msgDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight; // 스크롤 하단 이동
+    }
+
+    function playBase64Audio(base64String) {
+        try {
+            // base64 문자열에 헤더가 없다면 추가 (백엔드 출력 형식에 따라 다름)
+            // 보통 base64.b64encode 결과만 온다면 prefix 필요
+            const audioSrc = `data:audio/mp3;base64,${base64String}`; 
+            const audio = new Audio(audioSrc);
+            audio.play().catch(e => console.error("오디오 재생 실패:", e));
+        } catch (e) {
+            console.error("오디오 디코딩 실패:", e);
+        }
+    }
+
+    function updateRecordButton(active) {
+        const btn = document.getElementById('record-btn');
+        if (active) {
+            btn.textContent = "⏹ 녹음 중지 및 전송";
+            btn.classList.add('recording');
+        } else {
+            btn.textContent = "🎤 답변 녹음 시작";
+            btn.classList.remove('recording');
+        }
+    }
+
+    function logStatus(text) {
+        document.getElementById('status-text').textContent = text;
+    }
+</script>
+
+</body>
+</html>

@@ -13,6 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import relationship
+import uuid
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from core.database import Base
@@ -93,7 +94,7 @@ class TrialsReneDetail(Base):
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=True)
+    skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
@@ -114,10 +115,14 @@ class CompanyAIInterview(Base):
     job_group_id = Column(
         Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
     )
+    session_id = Column(
+        String(36), ForeignKey("company_ai_interview_session.session_id"), nullable=False
+    )
+    
     report = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)
-    total_evaluation = Column(JSON, nullable=True)
+    skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     ai_result = Column(String(20), nullable=False)
     best_answer = Column(Text, nullable=False)
     worst_answer = Column(Text, nullable=False)
@@ -127,7 +132,38 @@ class CompanyAIInterview(Base):
 
     jobseeker = relationship("Jobseeker", back_populates="company_ai_interviews")
     job_group = relationship("JobGroup", back_populates="company_ai_interviews")
+    session = relationship("CompanyAIInterviewSession", back_populates="result")
 
+class CompanyAIInterviewSession(Base):
+    __tablename__ = "company_ai_interview_session"
+
+    # UUID를 사용하여 예측 불가능한 세션 ID 생성 (보안상 추천)
+    session_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    
+    # 어떤 구직자의 면접인가?
+    jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
+    
+    # 어떤 직군에 대한 면접인가? (질문 생성을 위해 필요)
+    job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
+
+    # --- 진행 상태 관리 ---
+    status = Column(String(20), default="IN_PROGRESS") # 진행중, 완료, 에러 등
+    current_turn = Column(Integer, default=0) # 현재 턴 수 (예: 5/10)
+    interview_stage = Column(String(50), default="INTRO") # 현재 단계 (자기소개, 기술면접 등)
+    
+    # --- 대화 기록 (LangGraph Memory 역할) ---
+    # 방법 1: JSON으로 통째로 저장 (간편함, MySQL/Postgres 지원)
+    # 대화 내용: [{"role": "ai", "content": "..."}, {"role": "user", "content": "..."}]
+    chat_history = Column(JSON, nullable=True) 
+
+    # --- 메타 데이터 ---
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    # 관계 설정
+    jobseeker = relationship("Jobseeker")
+    # 나중에 결과 테이블과 1:1로 매핑될 수 있음
+    result = relationship("CompanyAIInterview", back_populates="session", uselist=False)
 
 # 6. 비대면 화상 면접
 class NonContactInterview(Base):
@@ -145,7 +181,7 @@ class NonContactInterview(Base):
     report = Column(LONGTEXT, nullable=True)
     summary = Column(Text, nullable=True)
     total_score = Column(Float, nullable=True)
-    total_evaluation = Column(JSON, nullable=True)
+    skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
     best_answer = Column(Text, nullable=True)
     worst_answer = Column(Text, nullable=True)
     total_advice = Column(Text, nullable=True)

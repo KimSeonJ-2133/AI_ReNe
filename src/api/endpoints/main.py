@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "./")))
 from rene_interview import rene_router
 from p2p_interview_api import p2p_router
 from auth import auth_router
+import company_ai_interview_api
 from upload_api import upload_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
@@ -16,10 +17,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="ReNe Project API", version="1.0.0")
 
-app.include_router(rene_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(p2p_router, prefix="/api/v1")
 app.include_router(upload_router, prefix="/api/v1")
+app.include_router(company_ai_interview_api.router, prefix="/api/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,7 +45,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 @app.get("/")
 async def read_root():
     # FileResponse(파일경로) 형태로 작성
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return FileResponse(os.path.join(static_dir, "interview_test.html"))
 
 if __name__ == "__main__":
     init_db()

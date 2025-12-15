@@ -39,6 +39,7 @@ def init_rdb_and_vector_db():
             password="12345",
             address="서울특별시 서초구",
             business_number="230-81-03325",
+            company_scale="중소기업",
             policy_agree_bool=True
         )
         db.add(company)
@@ -99,8 +100,13 @@ def init_rdb_and_vector_db():
             birthdate=date(1990, 1, 1),
             gender="MALE",
             address="서울특별시 서초구",
+            verification_badge="GREEN_CHECK",
+            ncs_level=6,
+            rcs_level=6,
+            mbti="INFP",
+            talent_type="PROVEN_ACE",
             policy_agree_bool=True,
-            is_docs_submit="NONE"
+            is_docs_submit="ALL"
         )
 
         db.add(jobseeker)
@@ -289,7 +295,7 @@ def init_rdb_and_vector_db():
         db.rollback()
         print(f"데이터 초기화 중 오류 발생: {e}")
         import traceback
-        traceback.format_exc()
+        print(traceback.format_exc())
     finally:
         db.close()
 

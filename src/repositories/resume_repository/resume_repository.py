@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from models import Resume
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.document import Resume
 import uuid
 
 class ResumeRepository:
@@ -16,3 +18,13 @@ class ResumeRepository:
     def get_resume_by_jobseeker_id(self, jobseeker_id: int):
         """이력서 조회"""
         return self.db.query(Resume).filter(Resume.jobseeker_id == jobseeker_id).order_by(Resume.created_at.desc()).first()
+    
+    def get_full_text(self, jobseeker_id: int):
+        """이력서 전체 텍스트 조회"""
+        resume = (
+            self.db.query(Resume)
+            .filter(Resume.jobseeker_id == jobseeker_id)
+            .order_by(Resume.created_at.desc())
+            .first()
+        )
+        return resume.markdown_content if resume else ""
