@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from models import Company
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.user import Company
 
 class CompanyRepository:
     def __init__(self, db: Session):

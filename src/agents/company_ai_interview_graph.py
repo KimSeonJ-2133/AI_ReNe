@@ -148,6 +148,7 @@ class CompanyAIInterviewAgent:
             "user_name": state.get("jobseeker_name"),
             "current_stage": current_stage,
             "last_evaluation_result": last_eval.get("result", "NONE"),
+            "follow_up_needed": last_eval.get("follow_up_needed", False),
             "messages": state["messages"]
         })
 

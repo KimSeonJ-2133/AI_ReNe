@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from models import Jobseeker
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.user import Jobseeker
 
 class JobseekerRepository:
     def __init__(self, db: Session):

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from models import Portfolio
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.document import Portfolio
 import uuid
 
 class PortfolioRepository:

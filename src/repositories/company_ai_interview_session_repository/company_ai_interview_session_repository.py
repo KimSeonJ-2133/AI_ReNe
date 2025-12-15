@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from models import CompanyAIInterviewSession
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from src.models.interview import CompanyAIInterviewSession
 
 class CompanyAIInterviewSessionRepository:
     def __init__(self, db: Session):
