@@ -2,6 +2,11 @@ import requests
 import os
 import json
 import time
+import sys
+
+# Add current directory to path to import generate_dummy_files
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import generate_dummy_files
 
 BASE_URL = "http://localhost:8000/api/v1"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -182,6 +187,10 @@ def upload_jd(company_id, index):
 
 def main():
     print("Starting data seeding via API...")
+    
+    # 0. Generate Dummy Files (Ensure fresh data with Education/Certifications)
+    print("Generating dummy files...")
+    generate_dummy_files.create_files()
     
     # 1. Create Job Seekers and Upload Portfolios
     for i in range(1, 11): # 1 to 10

@@ -53,15 +53,15 @@ async def run_simulation_batch():
                 current_count += 1
                 print(f"\n[{current_count}/{total_sessions}] Simulation: {seeker.name} vs {company.name}")
                 
-                # 해당 구직자의 이력서/포트폴리오 찾기
-                # (Seed 데이터에서는 Portfolio만 생성했으므로 Portfolio ID 사용)
-                # Resume ID가 필요한 인터페이스라면 Portfolio ID를 대신 넘기거나 수정 필요.
-                # 현재 InterviewService는 resume_id를 받아서 seeker_rag_service에 넘김.
-                # seeker_rag_service는 db_record_id로 필터링함.
-                # Seed 데이터에서 Portfolio를 저장할 때 db_record_id=portfolio.id 로 저장했음.
-                portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == seeker.id).first()
-                if not portfolio:
-                    print(f"  -> Skip: No portfolio for {seeker.name}")
+                # 해당 구직자의 이력서 및 포트폴리오 찾기
+                resume = db.query(Resume).filter(Resume.jobseeker_id == seeker.id).order_by(Resume.created_at.desc()).first()
+                portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == seeker.id).order_by(Portfolio.created_at.desc()).first()
+                
+                # Resume가 없으면 Portfolio ID를 사용 (Agent에서 처리하도록 수정됨)
+                target_resume_id = resume.id if resume else (portfolio.id if portfolio else None)
+                
+                if not target_resume_id:
+                    print(f"  -> Skip: No resume/portfolio for {seeker.name}")
                     continue
 
                 # 세션 생성
@@ -70,7 +70,7 @@ async def run_simulation_batch():
                     jobseeker_id=seeker.id,
                     company_id=company.id,
                     jd_id=notice.id,
-                    resume_id=portfolio.id 
+                    resume_id=target_resume_id
                 )
 
                 # 인터뷰 진행 (5턴 제한)

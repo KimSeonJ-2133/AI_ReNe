@@ -44,11 +44,25 @@ class SeekerPersonaAgent:
 
         # 3. DB에서 Main Skills 조회
         main_skills_context = ""
+        rcs_level = 1  # Default to 1 (Junior)
         with SessionLocal() as db:
             resume = db.query(Resume).filter(Resume.id == resume_id).first()
+            portfolio = None
+            
             if resume:
+                if resume.rcs_level:
+                    rcs_level = resume.rcs_level
                 portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == resume.jobseeker_id).order_by(Portfolio.created_at.desc()).first()
-                if portfolio and portfolio.main_skills:
+            else:
+                # Resume가 없으면 resume_id가 Portfolio ID일 수 있음 (Simulation Hack)
+                portfolio = db.query(Portfolio).filter(Portfolio.id == resume_id).first()
+
+            if portfolio:
+                # If resume didn't have rcs_level, try portfolio
+                if rcs_level == 1 and portfolio.rcs_level:
+                    rcs_level = portfolio.rcs_level
+
+                if portfolio.main_skills:
                     skills = portfolio.main_skills if isinstance(portfolio.main_skills, list) else []
                     skill_list = []
                     for skill in skills:
@@ -58,14 +72,13 @@ class SeekerPersonaAgent:
                     main_skills_context = ", ".join(skill_list)
                 else:
                     main_skills_context = "(등록된 핵심 기술이 없습니다.)"
-            else:
-                main_skills_context = "(지원자 정보를 찾을 수 없습니다.)"
 
         # 4. 프롬프트 구성
         system_prompt = SEEKER_INTERVIEWEE_PROMPT.format(
             job_title=job_title,
             main_skills_context=main_skills_context,
-            retrieved_context=retrieved_context
+            retrieved_context=retrieved_context,
+            rcs_level=rcs_level
         )
         
         messages = [SystemMessage(content=system_prompt)]

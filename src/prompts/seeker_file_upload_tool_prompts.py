@@ -110,7 +110,10 @@ The Language must be **Korean**.
 - **NCS Level:** **Lv. {N}** (Derived from highest complexity project)
 - **RCS Level:** **Lv. {M}**
 - **Summary:** "{One-line summary}"
-- **Education:** {Education Info}
+- **Education:**
+  - {School} ({Major}, {Period})
+- **Certifications:**
+  - {Certification Name} ({Date})
 - **History:**
   1. {Company} ({Period})
 """
