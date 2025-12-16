@@ -13,8 +13,12 @@ class ElevenLabsTTSService:
             print("ELEVENLABS_API_KEY가 설정되지 않았습니다.")
         
         self.client = ElevenLabs(api_key=self.api_key)
-        # 여성 목소리
-        self.voice_id = "OEaq3WGNtNvFJ5co9mJE"
+        #목소리
+        self.voice_id = "gJSDQIpSQ56NBGhorBfg" # 목소리 좋은 유튜버 목소리
+        # "v1jVu1Ky28piIPEJqRrm" # 젠틀하고낮은 다큐멘터리 남성 
+        #"pb3lVZVjdFWbkhPKlelB" # 중년 목소리 
+        # 젊은 남성 목소리 - "OEaq3WGNtNvFJ5co9mJE"
+
         # 한글 지원 모델
         self.model_id = "eleven_multilingual_v2"
 

@@ -1,0 +1,125 @@
+# Portfolio: 이연 (Lee Yeon)
+
+> **"데이터의 맥락을 이해하는 AI, 서비스를 지탱하는 견고한 백엔드."**
+> Back-end Engineering 기반 위에 AI Agent 기술을 더해 실질적인 가치를 창출하는 엔지니어입니다.
+
+---
+
+## 🛠 Project 1. 지능형 문서 분석 및 질의응답 AI Agent
+**RAG 및 LangGraph 기반의 자율 에이전트 개발 프로젝트**
+*2024.XX ~ 2024.XX (개인/팀 프로젝트)*
+
+### 1. 프로젝트 개요
+기존의 단순 LLM 챗봇이 가진 '할루시네이션(Hallucination)'과 '최신 정보 부재' 문제를 해결하기 위해 시작했습니다. 사용자가 업로드한 PDF 문서를 기반으로 정확한 답변을 제공하며, 문서에 없는 내용은 웹 검색을 통해 보완하는 **Hybrid RAG Agent**입니다.
+
+### 2. 사용 기술 (Tech Stack)
+- **Language**: Python 3.10
+- **Framework**: LangChain, LangGraph
+- **LLM & Embedding**: OpenAI GPT-4o, text-embedding-3-small
+- **Vector DB**: ChromaDB
+- **Tools**: Tavily Search API (웹 검색), PyPDFLoader
+- **Deployment**: Streamlit
+
+### 3. 주요 기능 및 구현 내용
+
+#### A. Advanced RAG Pipeline 구축
+- **문제**: 긴 문서의 경우 단순 청킹(Chunking) 시 맥락이 끊겨 검색 정확도가 하락함.
+- **해결**: `RecursiveCharacterTextSplitter`를 사용하여 문단 단위로 의미론적 청킹을 수행하고, `ParentDocumentRetriever`를 도입하여 검색은 작은 청크로 하되, LLM에게는 주변 맥락을 포함한 더 큰 텍스트 블록을 전달하도록 개선.
+- **결과**: 답변의 맥락 유지 성능 약 30% 향상 확인.
+
+#### B. LangGraph를 이용한 순환형(Cyclic) 워크플로우 설계
+- **기존 한계**: LangChain의 `AgentExecutor`는 복잡한 분기 처리와 상태 유지에 한계가 있음.
+- **해결**: LangGraph를 도입하여 `StateGraph`를 설계.
+    1. **Router Node**: 사용자 질문이 '문서 기반'인지 '일반 검색'인지 분류.
+    2. **Retrieval Node**: Vector DB에서 관련 정보 추출.
+    3. **Grade Node**: 추출된 문서가 질문에 적합한지 LLM이 자체 평가(Self-Reflection) 후, 부적합하면 웹 검색(Web Search Node)으로 루팅.
+- **결과**: 답변을 못 할 경우 "모르겠습니다"라고 끝나는 것이 아니라, 스스로 웹을 검색해 답변을 찾아오는 자율성 확보.
+
+### 4. 트러블 슈팅 (Trouble Shooting)
+- **이슈**: 대량의 문서를 임베딩할 때 API Rate Limit 및 속도 저하 발생.
+- **해결**: 비동기 처리(`asyncio`)를 도입하여 임베딩 요청을 병렬로 처리하고, 로컬 캐싱을 적용하여 중복 과금을 방지함.
+
+---
+
+## 💻 Project 2. Farmon: 도농 상생 인력 중개 플랫폼
+**Spring Boot 기반의 RESTful API 서버 개발 및 AWS 배포**
+*202X.XX ~ 202X.XX (팀 프로젝트 / 10명)*
+
+### 1. 프로젝트 개요
+일손이 부족한 전문 농부와 농업을 배우고 싶은 초보 농부를 연결해 주는 매칭 플랫폼입니다. 기존의 단순 게시판 형태를 벗어나, **조건 기반 자동 매칭 및 견적 프로세스**를 전산화했습니다.
+
+### 2. 사용 기술 (Tech Stack)
+- **Backend**: Java 17, Spring Boot 3.0, JPA(Hibernate), QueryDSL
+- **Database**: MySQL, Redis (세션 관리)
+- **Infra**: AWS EC2, RDS, S3
+- **Collaboration**: Git, Jira
+
+### 3. 담당 역할 및 핵심 성과
+
+#### A. 조건 기반 매칭 알고리즘 구현
+- **기능**: 지역, 작물, 활동 기간 등 5가지 조건을 필터링하여 적합한 대상을 추천.
+- **구현**: 복잡한 동적 쿼리 처리를 위해 **QueryDSL**을 도입. `BooleanBuilder`를 사용하여 Null 값이 들어오는 조건은 무시하고, 입력된 조건만으로 Where 절이 동적으로 생성되도록 구현.
+- **성과**: 하드코딩된 쿼리 대비 코드 가독성 향상 및 컴파일 시점 문법 오류 체크 가능.
+
+#### B. 견적 요청 프로세스 상태 관리
+- **기능**: `요청` -> `승인` -> `결제 대기` -> `매칭 완료` 단계별 상태 변경.
+- **구현**: 상태 패턴을 적용하는 대신, JPA의 `@Enumerated`와 비즈니스 로직 내 유효성 검사 메서드를 통해 상태 전이 규칙을 엄격하게 관리(예: '요청' 없이 바로 '매칭 완료' 불가).
+
+### 4. 트러블 슈팅 (Trouble Shooting)
+- **이슈**: 팀원 10명이 동시에 개발하며 `application.yml` 설정 파일 충돌 및 민감 정보(DB 비밀번호) 노출 위험.
+- **해결**: `git update-index --assume-unchanged` 명령어로 로컬 설정 파일 추적을 무시하고, 민감 정보는 AWS Parameter Store 또는 환경 변수로 분리하여 관리하는 전략 수립.
+
+---
+
+## 📊 Project 3. 제주도 개인 맞춤형 관광지 추천 시스템
+**협업 필터링 없는 환경에서의 콘텐츠 기반 추천 모델 개발**
+*202X.XX ~ 202X.XX (팀 프로젝트 / 2명)*
+
+### 1. 프로젝트 개요
+사용자 리뷰 데이터(협업 필터링용)가 부족한 'Cold Start' 상황에서, 관광지의 속성 데이터를 활용해 여행객의 취향에 맞는 장소를 추천하는 모델을 개발했습니다.
+
+### 2. 사용 기술 (Tech Stack)
+- **Data**: Python, Pandas, NumPy
+- **ML**: Scikit-learn (Cosine Similarity, TF-IDF)
+- **Visualization**: Matplotlib
+
+### 3. 주요 프로세스
+
+#### A. 데이터 전처리 및 벡터화
+- 제주 데이터 허브의 관광지 메타 데이터(카테고리, 태그, 위치, 설명) 수집.
+- 텍스트 데이터(관광지 설명, 태그)를 **TF-IDF(Term Frequency-Inverse Document Frequency)**로 벡터화하여, 단순 빈도수보다 각 관광지의 고유한 특징이 드러나도록 가중치 부여.
+
+#### B. 콘텐츠 기반 필터링 (Content-Based Filtering) 구현
+- 사용자가 선택한 선호 관광지와 전체 관광지 간의 **코사인 유사도(Cosine Similarity)**를 계산.
+- 유사도 점수가 높은 상위 5개 장소를 추출하여 추천 리스트 생성.
+
+### 4. 아쉬운 점 및 개선 방향
+- **한계**: 텍스트와 메타 정보만 활용하다 보니, 시각적 요소(풍경 사진 등)가 중요한 관광지의 특성을 반영하지 못함.
+- **개선안**: 향후 CLIP 같은 **멀티모달(Multi-modal) 모델**을 도입하여, 이미지 임베딩과 텍스트 임베딩을 결합한 하이브리드 추천 시스템으로 고도화 필요.
+
+---
+
+## 📈 Project 4. 가로수길 vs 성수동 상권 비교 분석
+**데이터 크롤링 및 텍스트 마이닝을 통한 상권 인사이트 도출**
+*202X.XX ~ 202X.XX (팀 프로젝트 / 3명)*
+
+### 1. 프로젝트 개요
+서울의 대표 핫플레이스인 가로수길과 성수동의 소비 패턴과 방문 목적이 어떻게 다른지 데이터를 통해 정량적으로 규명했습니다.
+
+### 2. 사용 기술 (Tech Stack)
+- **Crawling**: Selenium (Instagram, Naver Blog)
+- **NLP**: KoNLPy (Mecab), WordCloud
+- **Analysis**: Pandas, Seaborn
+
+### 3. 분석 내용 및 결과
+
+#### A. 키워드 분석 (Text Mining)
+- **가로수길**: '쇼핑', '브랜드', '팝업' 등 상업적 키워드 비중이 높음.
+- **성수동**: '카페', '전시', '분위기', '공장' 등 체험과 공간적 키워드 비중이 높음.
+
+#### B. 데이터 시각화
+- Seaborn의 Heatmap을 활용하여 요일별/시간대별 유동 인구 혼잡도를 비교 시각화.
+- 분석 결과, 성수동은 주말/평일 편차가 적으나 가로수길은 주말 집중도가 높다는 인사이트 도출.
+
+### 4. 배운 점
+- **데이터 정제**: 크롤링한 데이터의 약 40%가 광고성 게시글임을 확인. 이를 필터링하기 위해 '협찬', '광고' 등의 키워드가 포함된 데이터를 제외하는 전처리 로직의 중요성을 체감함.

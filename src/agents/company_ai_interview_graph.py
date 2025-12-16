@@ -10,15 +10,17 @@ from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import os, sys
 from typing import Literal
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import aiosqlite
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from core.config import settings
 from pathlib import Path    
 from dotenv import load_dotenv
 load_dotenv()
 
 current_path = Path(__file__).resolve()
 PROJECT_ROOT = current_path.parent.parent.parent
+DB_PATH = PROJECT_ROOT / "data" / "sqlite_saver" / "company_ai_interview_state.db"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # === 상태 정의 ===
 class InterviewState(TypedDict):
@@ -80,8 +82,8 @@ class FinalAnalystOutput(BaseModel):
 class CompanyAIInterviewAgent:
     def __init__(self):
         self.llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
-        self.checkpointer = MemorySaver()
-        self.graph = self._build_graph()
+        self.db_path = str(DB_PATH)
+        self.graph_builder = self._build_graph()
 
     def _load_prompt(self, filename: str) -> str:
         """프롬프트 파일 로드 안전 장치"""
@@ -117,8 +119,10 @@ class CompanyAIInterviewAgent:
             current_stage = "CLOSING"       # [NEW] 찐 종료 인사
         
         # 지침 설정
+        is_stage_change_turn = current_turn in [2, 5, 8] # 예: 스테이지가 바뀌는 턴
+
         last_eval = eval_history[-1]["eval"] if eval_history else {}
-        if last_eval.get("follow_up_needed"):
+        if last_eval.get("follow_up_needed") and not is_stage_change_turn:
             guidance = "!지침: 이전 답변이 불충분합니다. 꼬리 질문이나 압박 질문(Probing Question)을 던지세요."
         else:
             guidance = f"지침: 현재 스테이지[{current_stage}]에 알맞은 새로운 질문을 던지세요."
@@ -314,23 +318,35 @@ class CompanyAIInterviewAgent:
         # 분석 -> 종료
         workflow.add_edge("final_analyzer_node", END)
 
-        return workflow.compile(checkpointer=self.checkpointer)
+        return workflow
     
     # === Service Methods ===
     async def start_interview(self, session_id: str, initial_state: dict):
         """첫 질문 생성"""
         config = {"configurable": {"thread_id": session_id}}
-        return await self.graph.ainvoke(initial_state, config)
+
+        # 실행 시점에 DB 연결 -> 컴파일 -> 실행
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.is_alive = lambda: True
+            checkpointer = AsyncSqliteSaver(conn)
+            
+            graph = self.graph_builder.compile(checkpointer=checkpointer)
+            return await graph.ainvoke(initial_state, config)
     
     async def process_answer(self, session_id: str, user_answer: str):
         """답변 처리 및 다음 질문 생성"""
         config = {"configurable": {"thread_id": session_id}}
 
-        # 상태 업데이트 (유저답변 주입)
-        input_message = HumanMessage(content=user_answer)
-        await self.graph.aupdate_state(config, {"messages": [input_message]})
+        # 실행 시점에 DB 연결 -> 컴파일 -> 실행
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.is_alive = lambda: True
+            checkpointer = AsyncSqliteSaver(conn)
+            graph = self.graph_builder.compile(checkpointer=checkpointer)
+            
+            input_message = HumanMessage(content=user_answer)
+            await graph.aupdate_state(config, {"messages": [input_message]})
 
-        # 그래프 실행 (None을 주면 현재 상태에서 이어서 실행 -> start_route가 Evaluator로 보냄)
-        # invoke(None) 호출하면 원래 START부터 다시 시작하지만 start_route 로직에 의해 메시지가 있으면 Evaluator로 이동
-        return await self.graph.ainvoke(None, config)
+            # 그래프 실행 (None을 주면 현재 상태에서 이어서 실행 -> start_route가 Evaluator로 보냄)
+            # invoke(None) 호출하면 원래 START부터 다시 시작하지만 start_route 로직에 의해 메시지가 있으면 Evaluator로 이동
+            return await graph.ainvoke({"messages": [input_message]}, config)
 
