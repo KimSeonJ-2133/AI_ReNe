@@ -12,6 +12,7 @@ from src.utils.file_storage_utils import save_uploaded_file, validate_file_exten
 from src.agents.tools.file_text_extractor import extract_text_from_file
 from src.agents.company_jd_parser_agent import parse_jd_with_llm
 from src.schemas.company_schemas.company_file_upload_schemas import JDUploadResponse
+from services.rag_service import company_rag_service
 # from src.models.recruitment import RecruitmentNotice  # [가상 모델] 추후 구현 필요
 
 
@@ -119,8 +120,22 @@ async def process_company_file_upload(
         db.commit()
         db.refresh(new_notice)
         print(f"[Service] RecruitmentNotice 저장 완료 - ID: {new_notice.id}")
+        
+        # 7. RAG Vector DB 인덱싱
+        print(f"[Service] RAG Vector DB 인덱싱 시작...")
+        try:
+            metadata = {
+                "user_id": user_id,
+                "file_type": "company_jd",
+                "source": file_path,
+                "db_record_id": new_notice.id
+            }
+            company_rag_service.index_document(text_content, metadata)
+            print(f"[Service] RAG Vector DB 인덱싱 완료")
+        except Exception as rag_error:
+            print(f"[Service Warning] RAG 인덱싱 실패 (계속 진행): {rag_error}")
     
-    # 7. 결과 반환
+    # 8. 결과 반환
     return JDUploadResponse(
         file_id=file_id,
         min_rcs_level=parsing_result["min_rcs_level"],

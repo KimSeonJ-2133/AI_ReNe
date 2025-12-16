@@ -41,6 +41,14 @@ static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static
 # /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줌. (css, js 등)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+# [Data 폴더 마운트] 외부에서 HTML 파일 접근 허용
+# 프로젝트 루트의 data 폴더 경로 계산
+data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../data"))
+
+# /data 경로로 들어오는 요청은 data 폴더의 파일을 보여줌
+if os.path.exists(data_dir):
+    app.mount("/data", StaticFiles(directory=data_dir), name="data")
+
 # 루트 경로('/') 접속 시 index.html 파일을 반환
 @app.get("/")
 async def read_root():

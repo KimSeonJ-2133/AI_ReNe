@@ -15,6 +15,7 @@ from utils.file_storage_utils import save_uploaded_file
 from agents.tools.file_text_extractor import extract_text_from_file, get_text_preview
 from agents.seeker_file_upload_agent import parse_resume_with_llm, validate_parsing_result
 from schemas.jobseeker_schemas.seeker_file_upload_schemas import FileUploadResponse
+from services.rag_service import seeker_rag_service
 
 
 async def process_file_upload(
@@ -132,8 +133,22 @@ async def process_file_upload(
             db.commit()
             db.refresh(new_record)
             print(f"[Service] DB 저장 완료 - Record ID: {new_record.id}")
+            
+            # 8. RAG Vector DB 인덱싱
+            print(f"[Service] RAG Vector DB 인덱싱 시작...")
+            try:
+                metadata = {
+                    "user_id": user_id,
+                    "file_type": file_type,
+                    "source": file_path,
+                    "db_record_id": new_record.id
+                }
+                seeker_rag_service.index_document(text_content, metadata)
+                print(f"[Service] RAG Vector DB 인덱싱 완료")
+            except Exception as rag_error:
+                print(f"[Service Warning] RAG 인덱싱 실패 (계속 진행): {rag_error}")
         
-        # 8. 응답 데이터 구성
+        # 9. 응답 데이터 구성
         response = FileUploadResponse(
             file_id=file_id,
             ncs_level=parsing_result["ncs_level"],

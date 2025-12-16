@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 import os
 from uuid import uuid4
+from typing import Optional
 
 from api.deps import get_db
 from src.models.user import Jobseeker
@@ -12,11 +13,11 @@ from schemas.company_schemas.company_file_upload_schemas import JDUploadResponse
 
 upload_router = APIRouter(prefix="/upload", tags=["File Upload"])
 
-
 @upload_router.post("/jobseeker-docs", response_model=FileUploadResponse)
 async def upload_jobseeker_docs(
     file: UploadFile = File(...),
     file_type: str = Form("portfolio"),
+    email: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -25,6 +26,7 @@ async def upload_jobseeker_docs(
     Parameters:
     - **file**: 업로드 파일 (파일명에서 사용자 이메일 추출. 예: 01_jobplz.pdf -> jobplz)
     - **file_type**: "resume" 또는 "portfolio"
+    - **email**: 사용자 이메일 (선택 사항. 제공 시 파일명 파싱보다 우선함)
     
     Returns:
     - file_id: 파일 고유 ID
@@ -39,18 +41,23 @@ async def upload_jobseeker_docs(
             detail="file_type은 'resume' 또는 'portfolio' 중 하나여야 합니다."
         )
     
-    # 파일명에서 username(email) 추출
-    # 로직: {순서}_{username}.{확장자} 또는 {username}.{확장자}
-    # 예: "01_jobplz.pdf" -> "jobplz"
-    filename = file.filename
-    name_without_ext = os.path.splitext(filename)[0]
-    parts = name_without_ext.split('_')
-    
-    if len(parts) >= 2:
-        username = parts[-1]
+    # 이메일이 제공된 경우 우선 사용
+    if email:
+        username = email
     else:
-        username = name_without_ext
+        # 파일명에서 username(email) 추출
+        # 로직: {순서}_{username}.{확장자} 또는 {username}.{확장자}
+        # 예: "01_jobplz.pdf" -> "jobplz"
+        filename = file.filename
+        name_without_ext = os.path.splitext(filename)[0]
+        parts = name_without_ext.split('_')
         
+        if len(parts) >= 2:
+            username = parts[-1]
+        else:
+            username = name_without_ext
+        
+    # DB에서 사용자 조회 (email 기준)
     # DB에서 사용자 조회 (email 기준)
     jobseeker = db.query(Jobseeker).filter(Jobseeker.email == username).first()
     
