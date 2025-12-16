@@ -119,8 +119,10 @@ class CompanyAIInterviewAgent:
             current_stage = "CLOSING"       # [NEW] 찐 종료 인사
         
         # 지침 설정
+        is_stage_change_turn = current_turn in [2, 5, 8] # 예: 스테이지가 바뀌는 턴
+
         last_eval = eval_history[-1]["eval"] if eval_history else {}
-        if last_eval.get("follow_up_needed"):
+        if last_eval.get("follow_up_needed") and not is_stage_change_turn:
             guidance = "!지침: 이전 답변이 불충분합니다. 꼬리 질문이나 압박 질문(Probing Question)을 던지세요."
         else:
             guidance = f"지침: 현재 스테이지[{current_stage}]에 알맞은 새로운 질문을 던지세요."

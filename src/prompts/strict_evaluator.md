@@ -27,9 +27,9 @@
 # 출력 형식 (JSON Only)
 반드시 아래 JSON 형식으로만 출력하세요.
 
-{
+{{
   "score": <0-10 정수>,
   "result": "PASS" | "WEAK" | "FAIL",
   "reason": "점수 부여 사유 및 평가 근거 (한국어 1문장)",
   "follow_up_needed": true | false  // WEAK일 경우 true (권장), 그 외 false
-}
+}}

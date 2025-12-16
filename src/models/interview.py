@@ -116,7 +116,7 @@ class CompanyAIInterview(Base):
         Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False
     )
     session_id = Column(
-        String(36), ForeignKey("company_ai_interview_session.session_id"), nullable=False
+        String(255), ForeignKey("company_ai_interview_session.session_id"), nullable=False
     )
     
     report = Column(LONGTEXT, nullable=False)
@@ -138,7 +138,7 @@ class CompanyAIInterviewSession(Base):
     __tablename__ = "company_ai_interview_session"
 
     # UUID를 사용하여 예측 불가능한 세션 ID 생성 (보안상 추천)
-    session_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # 어떤 구직자의 면접인가?
     jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
