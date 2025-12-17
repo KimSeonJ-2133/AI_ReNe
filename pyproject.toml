@@ -47,4 +47,5 @@ dependencies = [
     "reportlab>=4.4.5",
     "langgraph-checkpoint-sqlite>=3.0.1",
     "aiosqlite>=0.22.0",
+    "pydub>=0.25.1",
 ]

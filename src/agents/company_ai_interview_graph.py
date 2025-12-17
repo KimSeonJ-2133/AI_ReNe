@@ -123,7 +123,7 @@ class CompanyAIInterviewAgent:
 
         last_eval = eval_history[-1]["eval"] if eval_history else {}
         if last_eval.get("follow_up_needed") and not is_stage_change_turn:
-            guidance = "!지침: 이전 답변이 불충분합니다. 꼬리 질문이나 압박 질문(Probing Question)을 던지세요."
+            guidance = "!지침: 이전 답변이 불충분합니다. 압박 질문(Probing Question)을 던지세요."
         else:
             guidance = f"지침: 현재 스테이지[{current_stage}]에 알맞은 새로운 질문을 던지세요."
 
