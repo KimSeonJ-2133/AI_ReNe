@@ -35,4 +35,11 @@ class CompanyAIInterviewRepository:
         except Exception as e:
             self.db.rollback()
             raise e
-
+        
+    def get_by_id(self, interview_id: int):
+        return (
+            self.db.query(CompanyAIInterview)
+            .filter(CompanyAIInterview.id == interview_id)
+            .order_by(CompanyAIInterview.created_at.desc())
+            .first()
+        )

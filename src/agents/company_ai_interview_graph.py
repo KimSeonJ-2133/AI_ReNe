@@ -350,3 +350,4 @@ class CompanyAIInterviewAgent:
             # invoke(None) 호출하면 원래 START부터 다시 시작하지만 start_route 로직에 의해 메시지가 있으면 Evaluator로 이동
             return await graph.ainvoke({"messages": [input_message]}, config)
 
+    
