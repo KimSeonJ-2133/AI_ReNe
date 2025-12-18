@@ -99,6 +99,7 @@ class CompanyAIInterviewService:
         if ai_state.get("messages"):
             last_message = ai_state["messages"][-1] # LangChain Message 객체
             last_message_content = last_message.content
+            print(f"AI 면접관 질문: {last_message_content}")
             
             # DB의 chat_history(JSON)에 AI의 첫 질문 기록
             # LangGraph의 messages는 객체이므로 JSON 직렬화 가능한 dict로 변환해 저장해야 함
@@ -186,7 +187,9 @@ class CompanyAIInterviewService:
         last_ai_message = ""
         if ai_state.get("messages"):
             last_ai_message = ai_state["messages"][-1].content
-        
+            # AI 답변 출력
+            print(f"AI 면접관 질문: {last_ai_message}")
+
         ai_entry = {
             "role": "ai", 
             "content": last_ai_message, 
