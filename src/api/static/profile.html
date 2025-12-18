@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReNe Profile - Bento Grid</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary-color: #2563eb;
+            --primary-light: #eff6ff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-radius: 1.25rem;
+            --gap: 1.5rem;
+            --accent-color: #8b5cf6;
+        }
+
+        * {
+            box_sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Bento Grid Layout */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: minmax(180px, auto);
+            gap: var(--gap);
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary-light);
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-header i {
+            color: var(--primary-color);
+        }
+
+        /* Grid Spans */
+        .col-span-1 { grid-column: span 1; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+        .col-span-4 { grid-column: span 4; }
+        
+        .row-span-1 { grid-row: span 1; }
+        .row-span-2 { grid-row: span 2; }
+
+        /* Profile Card */
+        .profile-card {
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(to bottom, #ffffff, #f9fafb);
+        }
+        
+        .profile-img-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .initial-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.025em;
+        }
+        .profile-role {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        
+        .social-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .social-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .download-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .download-btn:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        /* Level Card */
+        .level-card {
+            background: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .level-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+
+        .level-number {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .level-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Skills */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+        .skill-tag {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .skill-tag:hover {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        /* List Items */
+        .list-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .list-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        .list-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Project Card */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+        .project-item {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        .project-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        .role-badge {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .project-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+        
+        /* Markdown Styles within Project Desc */
+        .project-desc ul {
+            padding-left: 1.2rem;
+            margin: 0.5rem 0;
+        }
+        .project-desc li {
+            margin-bottom: 0.25rem;
+        }
+        .project-desc strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+        .project-desc p {
+            margin-bottom: 0.5rem;
+        }
+        .project-desc code {
+            background-color: #f3f4f6;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.2rem;
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #d946ef; /* Pinkish for tech terms */
+        }
+
+        .metric-highlight {
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .project-tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: auto;
+        }
+        .project-tag {
+            font-size: 0.75rem;
+            color: #6b7280;
+            background-color: #f9fafb;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid #f3f4f6;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .col-span-3, .col-span-4 {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .col-span-1, .col-span-2, .col-span-3, .col-span-4 {
+                grid-column: span 1;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1 style="margin-bottom: 2rem; font-weight: 800; font-size: 2.5rem;">My Profile</h1>
+        
+        <div class="bento-grid" id="profile-grid">
+            <!-- 1. Profile Main (2x2) -->
+            <div class="card col-span-2 row-span-2 profile-card">
+                <div class="profile-img-container" id="avatar-container">
+                    <!-- Image or Initial Avatar will be injected here -->
+                </div>
+                <h2 class="profile-name" id="p-name">Loading...</h2>
+                <p class="profile-role" id="p-email">...</p>
+                <p style="margin-top: 0.5rem; color: var(--text-secondary); max-width: 80%; line-height: 1.6;" id="p-intro">...</p>
+                
+                <!-- Social Links -->
+                <div class="social-links" id="p-links">
+                    <!-- Links injected via JS -->
+                </div>
+
+                <!-- Resume Download -->
+                <button class="download-btn" onclick="alert('이력서 다운로드 기능은 준비중입니다.')">
+                    <i class="fas fa-file-download"></i> Download Resume
+                </button>
+            </div>
+
+            <!-- 2. RCS Level (1x1) -->
+            <div class="card col-span-1 row-span-1 level-card">
+                <div class="level-number" id="p-rcs">?</div>
+                <div class="level-label">RCS Level</div>
+            </div>
+
+            <!-- 3. NCS Level (1x1) -->
+            <div class="card col-span-1 row-span-1 level-card">
+                <div class="level-number" id="p-ncs">?</div>
+                <div class="level-label">NCS Level</div>
+            </div>
+
+            <!-- 4. Badge / Talent Type (2x1) -->
+            <div class="card col-span-2 row-span-1">
+                <div class="card-header"><i class="fas fa-medal"></i> 인증 & 성향</div>
+                <div style="display: flex; gap: 1rem; align-items: center; height: 100%;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;" id="p-badge-icon">🌱</div>
+                        <div style="font-weight: 700; font-size: 1.1rem;" id="p-badge-text">Sprout</div>
+                    </div>
+                    <div style="width: 1px; height: 60px; background: #e5e7eb;"></div>
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: 700; color: var(--accent-color);" id="p-talent">Unknown</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Talent Type</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Skills (2x2) -->
+            <div class="card col-span-2 row-span-2">
+                <div class="card-header"><i class="fas fa-code"></i> Tech Stack</div>
+                <div class="skills-container" id="p-skills">
+                    <!-- Skills will be injected here -->
+                </div>
+            </div>
+
+            <!-- 6. Education (2x1) -->
+            <div class="card col-span-2 row-span-1">
+                <div class="card-header"><i class="fas fa-graduation-cap"></i> Education</div>
+                <div id="p-education">
+                    <!-- Education list -->
+                </div>
+            </div>
+
+            <!-- 7. Career (2x2) -->
+            <div class="card col-span-2 row-span-2">
+                <div class="card-header"><i class="fas fa-briefcase"></i> Work Experience</div>
+                <div id="p-career" style="overflow-y: auto; max-height: 400px;">
+                    <!-- Career list -->
+                </div>
+            </div>
+
+            <!-- 8. Projects (4x2) -->
+            <div class="card col-span-4 row-span-2">
+                <div class="card-header"><i class="fas fa-rocket"></i> Key Projects</div>
+                <div class="project-grid" id="p-projects">
+                    <!-- Projects grid -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchProfile() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id') || 1;
+
+            try {
+                const response = await fetch(`/api/v1/jobseeker/profile/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profile');
+                }
+                const data = await response.json();
+                renderProfile(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('프로필 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        function renderProfile(data) {
+            // 1. Basic Info & Avatar
+            document.getElementById('p-name').textContent = data.name;
+            document.getElementById('p-email').textContent = data.email;
+            document.getElementById('p-intro').textContent = data.brief_introduction || "자기소개가 없습니다.";
+            
+            const avatarContainer = document.getElementById('avatar-container');
+            if (data.profile_image_url) {
+                avatarContainer.innerHTML = `<img src="${data.profile_image_url}" alt="Profile" class="profile-img">`;
+            } else {
+                // Initial Avatar
+                const initial = data.name ? data.name.charAt(0).toUpperCase() : '?';
+                avatarContainer.innerHTML = `<div class="initial-avatar">${initial}</div>`;
+            }
+
+            // Social Links
+            const linksContainer = document.getElementById('p-links');
+            linksContainer.innerHTML = '';
+            if (data.links && data.links.length > 0) {
+                data.links.forEach(link => {
+                    let iconClass = 'fas fa-link';
+                    if (link.type === 'github') iconClass = 'fab fa-github';
+                    if (link.type === 'linkedin') iconClass = 'fab fa-linkedin';
+                    if (link.type === 'blog') iconClass = 'fas fa-pen-nib';
+                    
+                    const btn = document.createElement('a');
+                    btn.className = 'social-btn';
+                    btn.href = link.url;
+                    btn.target = '_blank';
+                    btn.innerHTML = `<i class="${iconClass}"></i>`;
+                    linksContainer.appendChild(btn);
+                });
+            }
+
+            // 2. Levels
+            document.getElementById('p-rcs').textContent = data.rcs_level || '-';
+            document.getElementById('p-ncs').textContent = data.ncs_level || '-';
+
+            // 3. Badge & Talent (Empty State Handling)
+            document.getElementById('p-badge-text').textContent = data.verification_badge || "Unverified";
+            
+            const talentEl = document.getElementById('p-talent');
+            if (!data.talent_type || data.talent_type === "Unclassified") {
+                talentEl.textContent = "Analysis Pending";
+                talentEl.style.color = "var(--text-secondary)";
+                talentEl.style.fontSize = "1rem";
+            } else {
+                talentEl.textContent = data.talent_type;
+            }
+
+            // 4. Skills
+            const skillsContainer = document.getElementById('p-skills');
+            skillsContainer.innerHTML = '';
+            if (data.main_skills && data.main_skills.length > 0) {
+                data.main_skills.forEach(skill => {
+                    const tag = document.createElement('div');
+                    tag.className = 'skill-tag';
+                    tag.textContent = skill;
+                    skillsContainer.appendChild(tag);
+                });
+            } else {
+                skillsContainer.innerHTML = '<p style="color: #9ca3af;">등록된 기술 스택이 없습니다.</p>';
+            }
+
+            // 5. Education
+            const eduContainer = document.getElementById('p-education');
+            eduContainer.innerHTML = '';
+            if (data.education && data.education.length > 0) {
+                data.education.forEach(edu => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `<div class="list-title"><i class="fas fa-university" style="color: #9ca3af; margin-right: 0.5rem;"></i>${edu}</div>`;
+                    eduContainer.appendChild(item);
+                });
+            } else {
+                eduContainer.innerHTML = '<p style="color: #9ca3af;">학력 정보가 없습니다.</p>';
+            }
+
+            // 6. Career (Empty State Handling)
+            const careerContainer = document.getElementById('p-career');
+            careerContainer.innerHTML = '';
+            if (data.career && data.career.length > 0) {
+                data.career.forEach(job => {
+                    // Filter out Unknown/Empty
+                    let company = job.company_name || job.company || "Unknown Company";
+                    if (company === "Unknown") company = "비공개 회사";
+                    
+                    const role = job.role || job.position || "Member";
+                    const period = job.period || "";
+                    
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `
+                        <div class="list-title">${company}</div>
+                        <div class="list-subtitle">
+                            <span>${role}</span>
+                            <span style="margin: 0 0.5rem;">•</span>
+                            <span>${period}</span>
+                        </div>
+                    `;
+                    careerContainer.appendChild(item);
+                });
+            } else {
+                careerContainer.innerHTML = '<p style="color: #9ca3af;">경력 정보가 없습니다.</p>';
+            }
+
+            // 7. Projects (Metrics & Tech Stack)
+            const projectContainer = document.getElementById('p-projects');
+            projectContainer.innerHTML = '';
+            if (data.projects && data.projects.length > 0) {
+                data.projects.forEach(proj => {
+                    const item = document.createElement('div');
+                    item.className = 'project-item';
+                    
+                    const title = proj.project_name || proj.name || "Untitled Project";
+                    let rawDesc = proj.description || proj.summary || "No description available.";
+                    const role = proj.position || proj.role || "Contributor";
+                    
+                    // 1. Markdown Parsing
+                    let descHtml = marked.parse(rawDesc);
+
+                    // 2. Metrics Highlighting (Apply to parsed HTML)
+                    // Simple regex to bold numbers followed by % or '배' or '개'
+                    descHtml = descHtml.replace(/(\d+(?:%|배|개|건|ms|s))/g, '<span class="metric-highlight">$1</span>');
+
+                    // 3. Tech Keyword Highlighting (Optional enhancement)
+                    // Highlight known tech keywords if they appear in text but aren't already code blocks
+                    // This is a simple heuristic.
+                    const techKeywords = ["Kotlin", "Java", "Python", "Jetpack Compose", "MVI", "MVVM", "Clean Architecture", "Retrofit", "Room", "Glide", "Hilt", "Coroutines", "Flow"];
+                    techKeywords.forEach(tech => {
+                        // Avoid replacing inside existing tags
+                        const regex = new RegExp(`(?<!<[^>]*)\\b${tech}\\b`, 'g');
+                        descHtml = descHtml.replace(regex, `<code>${tech}</code>`);
+                    });
+
+                    // Tech Stack Tags
+                    let techStackHtml = '';
+                    if (proj.tech_stack && proj.tech_stack.length > 0) {
+                        techStackHtml = '<div class="project-tech-stack">';
+                        proj.tech_stack.forEach(tech => {
+                            techStackHtml += `<span class="project-tag">${tech}</span>`;
+                        });
+                        techStackHtml += '</div>';
+                    }
+
+                    item.innerHTML = `
+                        <div class="project-header">
+                            <div class="project-title">${title}</div>
+                            <div class="role-badge">${role}</div>
+                        </div>
+                        <div class="project-desc">${descHtml}</div>
+                        ${techStackHtml}
+                    `;
+                    projectContainer.appendChild(item);
+                });
+            } else {
+                projectContainer.innerHTML = '<p style="color: #9ca3af;">등록된 프로젝트가 없습니다.</p>';
+            }
+        }
+
+        fetchProfile();
+    </script>
+</body>
+</html>

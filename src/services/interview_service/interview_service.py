@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.agents.interview_agent import interview_agent
 from src.models.interview import InterviewSession, ChatLog
 from src.models.document import Resume, Portfolio
+from src.models.user import Jobseeker
 
 # STT 모듈 임포트
 # TTS 모튤 임포트
@@ -15,6 +16,42 @@ from src.models.document import Resume, Portfolio
 
 # Main Service Logic
 # -----
+def get_portfolio_context(db: Session, user_id: int) -> str:
+    """DB에서 최신 포트폴리오 정보를 로드하여 프롬프트용 컨텍스트로 변환합니다."""
+    portfolio = db.query(Portfolio).filter(Portfolio.jobseeker_id == user_id).order_by(Portfolio.created_at.desc()).first()
+    
+    if not portfolio:
+        # 포트폴리오가 없으면 이력서 요약이라도 가져옴
+        resume = db.query(Resume).filter(Resume.jobseeker_id == user_id).order_by(Resume.created_at.desc()).first()
+        if resume and resume.brief_self_introduction:
+            return f"## [Resume Summary]\n{resume.brief_self_introduction[:500]}..."
+        return "포트폴리오 및 이력서 정보 없음."
+    
+    context = "## [Candidate Portfolio Analysis]\n"
+    
+    # 1. Main Skills (Reasoning 포함)
+    if portfolio.main_skills:
+        context += "### Main Skills (Verified/Reasoning)\n"
+        # main_skills가 리스트인지 확인
+        skills = portfolio.main_skills if isinstance(portfolio.main_skills, list) else []
+        for skill in skills:
+            name = skill.get("name", "Unknown")
+            level = skill.get("ncs_level", 1)
+            reasoning = skill.get("reasoning", "No reasoning provided.")
+            context += f"- **{name} (Lv.{level})**: {reasoning}\n"
+    
+    # 2. Project Details (Tech Context & Achievements)
+    if portfolio.project_details:
+        context += "\n### Project Experience (Tech Context & Achievements)\n"
+        projects = portfolio.project_details if isinstance(portfolio.project_details, list) else []
+        for project in projects:
+            name = project.get("project_name", "Unknown Project")
+            role = project.get("position", "Unknown Role")
+            desc = project.get("description", "")
+            context += f"#### {name} ({role})\n{desc}\n"
+            
+    return context
+
 def get_latest_resume_summary(db: Session, user_id: int) -> str:
     """DB에서 최신 이력서 요약(parsed_markdown)을 로드합니다."""
     # 실제 구현 시, 최신 Resume/Portfolio 레코드를 찾아서 필요한 정보를 추출해야 합니다.
@@ -39,8 +76,14 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
         # user_text = stt_service.trascribe(await audio_file.read())
         user_text = "사용자 음성 인식을 대체하는 임시 테스트 텍스트입니다."     # Mock
 
-        # [Logic] 구직자 프로필 로드
-        resume_summary = get_latest_resume_summary(db, session.user_id)     
+        # [Logic] 구직자 프로필 및 포트폴리오 로드
+        resume_summary = get_latest_resume_summary(db, session.user_id)
+        portfolio_context = get_portfolio_context(db, session.user_id)
+        
+        # 구직자 정보 로드
+        jobseeker = db.query(Jobseeker).filter(Jobseeker.id == session.user_id).first()
+        user_name = jobseeker.name if jobseeker else "지원자"
+        badge_type = jobseeker.verification_badge if jobseeker else "SPROUT"
 
         # [Evaluator] 평가
         context_type = "SKILL_CHECK" if session.stage == "GROWTH" else "INFO_GATHERING"
@@ -82,7 +125,7 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
         if session.stage == "GROWTH":
             persona_file = "ReNe of Growth.md"          # 로직에 따라 파일 선택
         elif session.stage == "TRIAL":
-            persona_file = "Corperate_Recruiter.md"     # (TODO: JRS 데이터 주입 로직 추가 필요)
+            persona_file = "Corporate_Recruiter.md"     # Typo Fixed
         else:
             persona_file = "ReNe_of_the_Beginning.md"
 
@@ -90,6 +133,11 @@ async def process_interview_turn(db: Session, session_id: str, audio_file: Uploa
         input_vars = {
             "current_mode": session.current_mode,
             "resume_summary": resume_summary,
+            "portfolio_context": portfolio_context, # 추가된 컨텍스트
+            "user_name": user_name,
+            "badge_type": badge_type,
+            "company_name": "Tech Corp", # TODO: 실제 기업명 연동 필요
+            "persona_type": "Tech Interviewer",
             "previous_user_answer": user_text,  # High 모드
             "user_text": user_text              # HumanMessage에 포함되므로 중복될 수 있으나, Persona 파일에서 사용될 경우를 위해 추가
         }

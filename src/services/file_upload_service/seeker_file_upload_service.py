@@ -15,6 +15,7 @@ from utils.file_storage_utils import save_uploaded_file
 from agents.tools.file_text_extractor import extract_text_from_file, get_text_preview
 from agents.seeker_file_upload_agent import parse_resume_with_llm, validate_parsing_result
 from schemas.jobseeker_schemas.seeker_file_upload_schemas import FileUploadResponse
+from services.rag_service import seeker_rag_service
 
 
 async def process_file_upload(
@@ -99,41 +100,65 @@ async def process_file_upload(
                     detail=f"구직자 정보를 찾을 수 없습니다. (ID: {user_id})"
                 )
             
-            if file_type == "resume":
-                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (skills, education 등)
-                new_record = Resume(
-                    jobseeker_id=jobseeker.id,
-                    brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", "N/A"),
-                    work_experience=parsing_result["parsed_data"].get("work_experience", []),
-                    brief_project_introduction=parsing_result["parsed_data"].get("brief_project_introduction", []),
-                    education=parsing_result["parsed_data"].get("education", []),
-                    skills=parsing_result["parsed_data"].get("skills", []),
-                    certifications=parsing_result["parsed_data"].get("certifications", []),
-                    other_experience=parsing_result["parsed_data"].get("other_experience", []),
-                    languages=parsing_result["parsed_data"].get("languages", []),
-                    ncs_level=ncs_level_int,
-                    rcs_level=rcs_level_int,
-                    markdown_content=parsing_result["markdown_content"]
-                )
-                db.add(new_record)
+            # 1. Resume 저장
+            resume_record = Resume(
+                jobseeker_id=jobseeker.id,
+                brief_self_introduction=parsing_result["parsed_data"].get("brief_self_introduction", "N/A"),
+                work_experience=parsing_result["parsed_data"].get("work_experience", []),
+                brief_project_introduction=parsing_result["parsed_data"].get("brief_project_introduction", []),
+                education=parsing_result["parsed_data"].get("education", []),
+                skills=parsing_result["parsed_data"].get("skills", []),
+                certifications=parsing_result["parsed_data"].get("certifications", []),
+                other_experience=parsing_result["parsed_data"].get("other_experience", []),
+                languages=parsing_result["parsed_data"].get("languages", []),
+                ncs_level=ncs_level_int,
+                rcs_level=rcs_level_int,
+                markdown_content=parsing_result["markdown_content"]
+            )
+            db.add(resume_record)
             
-            elif file_type == "portfolio":
-                # Markdown 내용 외의 구조화된 데이터도 함께 저장 (main_skills, project_details 등)
-                new_record = Portfolio(
-                    jobseeker_id=jobseeker.id,
-                    main_skills=parsing_result["parsed_data"].get("main_skills", []),
-                    project_details=parsing_result["parsed_data"].get("project_details", []),
-                    ncs_level=ncs_level_int,
-                    rcs_level=rcs_level_int,
-                    markdown_content=parsing_result["markdown_content"]
-                )
-                db.add(new_record)
+            # 2. Portfolio 저장
+            portfolio_record = Portfolio(
+                jobseeker_id=jobseeker.id,
+                main_skills=parsing_result["parsed_data"].get("main_skills", []),
+                project_details=parsing_result["parsed_data"].get("project_details", []),
+                ncs_level=ncs_level_int,
+                rcs_level=rcs_level_int,
+                markdown_content=parsing_result["markdown_content"]
+            )
+            db.add(portfolio_record)
             
             db.commit()
-            db.refresh(new_record)
-            print(f"[Service] DB 저장 완료 - Record ID: {new_record.id}")
+            db.refresh(resume_record)
+            db.refresh(portfolio_record)
+            print(f"[Service] DB 저장 완료 - Resume ID: {resume_record.id}, Portfolio ID: {portfolio_record.id}")
+            
+            # 8. RAG Vector DB 인덱싱 (Resume & Portfolio 각각 인덱싱)
+            print(f"[Service] RAG Vector DB 인덱싱 시작...")
+            try:
+                # Resume Indexing
+                resume_metadata = {
+                    "user_id": user_id,
+                    "file_type": "resume",
+                    "source": file_path,
+                    "db_record_id": resume_record.id
+                }
+                seeker_rag_service.index_document(text_content, resume_metadata)
+
+                # Portfolio Indexing
+                portfolio_metadata = {
+                    "user_id": user_id,
+                    "file_type": "portfolio",
+                    "source": file_path,
+                    "db_record_id": portfolio_record.id
+                }
+                seeker_rag_service.index_document(text_content, portfolio_metadata)
+                
+                print(f"[Service] RAG Vector DB 인덱싱 완료 (Resume & Portfolio)")
+            except Exception as rag_error:
+                print(f"[Service Warning] RAG 인덱싱 실패 (계속 진행): {rag_error}")
         
-        # 8. 응답 데이터 구성
+        # 9. 응답 데이터 구성
         response = FileUploadResponse(
             file_id=file_id,
             ncs_level=parsing_result["ncs_level"],

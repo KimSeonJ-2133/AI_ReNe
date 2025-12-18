@@ -261,19 +261,56 @@ def normalize_skill_name(name: str) -> str:
 def extract_education(text: str) -> list:
     """Step 3 섹션에서 학력 추출"""
     education_list = []
-    # 패턴: - **Education:** {Content}
-    pattern = r'-\s*\*\*Education:\*\*\s*(.*)'
-    matches = re.findall(pattern, text)
+    
+    # Education 섹션 찾기
+    # Format:
+    # - **Education:**
+    #   - {School} ({Major}, {Period})
+    
+    section_match = re.search(r'-\s*\*\*Education:\*\*(.*?)(?=-\s*\*\*|$)', text, re.DOTALL)
+    if not section_match:
+        # Fallback for single line format: - **Education:** {Content}
+        pattern = r'-\s*\*\*Education:\*\*\s*(.+)'
+        match = re.search(pattern, text)
+        if match:
+            return [match.group(1).strip()]
+        return []
+        
+    content = section_match.group(1)
+    
+    # 리스트 아이템 파싱
+    pattern = r'-\s*(.+)'
+    matches = re.finditer(pattern, content)
     
     for match in matches:
-        education_list.append(match.strip())
+        education_list.append(match.group(1).strip())
         
     return education_list
 
 
 def extract_certifications(text: str) -> list:
-    """(Deprecated in new prompt)"""
-    return []
+    """Step 3 섹션에서 자격증 추출"""
+    cert_list = []
+    
+    # Certifications 섹션 찾기
+    # Format:
+    # - **Certifications:**
+    #   - {Certification Name} ({Date})
+    
+    section_match = re.search(r'-\s*\*\*Certifications:\*\*(.*?)(?=-\s*\*\*|$)', text, re.DOTALL)
+    if not section_match:
+        return []
+        
+    content = section_match.group(1)
+    
+    # 리스트 아이템 파싱
+    pattern = r'-\s*(.+)'
+    matches = re.finditer(pattern, content)
+    
+    for match in matches:
+        cert_list.append(match.group(1).strip())
+        
+    return cert_list
 
 
 def extract_history(text: str) -> list:

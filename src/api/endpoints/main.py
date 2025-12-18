@@ -10,6 +10,8 @@ from p2p_interview_api import p2p_router
 from auth import auth_router
 import company_ai_interview_api
 from upload_api import upload_router
+from jobseeker_profile_api import profile_router
+from view_router import view_router
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -21,6 +23,13 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(p2p_router, prefix="/api/v1")
 app.include_router(upload_router, prefix="/api/v1")
 app.include_router(company_ai_interview_api.router, prefix="/api/v1")
+app.include_router(profile_router, prefix="/api/v1")
+app.include_router(view_router)
+
+# Static files mount
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,16 +45,14 @@ def init_db():
     Base.metadata.create_all(bind=engine) # DB 생성
     print("모든 테이블이 생성되었습니다.")
 
-static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
+# [Data 폴더 마운트] 외부에서 HTML 파일 접근 허용
+# 프로젝트 루트의 data 폴더 경로 계산
+data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../data"))
 
-# /static 경로로 들어오는 요청은 static 폴더의 파일을 보여줌. (css, js 등)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# /data 경로로 들어오는 요청은 data 폴더의 파일을 보여줌
+if os.path.exists(data_dir):
+    app.mount("/data", StaticFiles(directory=data_dir), name="data")
 
-# 루트 경로('/') 접속 시 index.html 파일을 반환
-@app.get("/")
-async def read_root():
-    # FileResponse(파일경로) 형태로 작성
-    return FileResponse(os.path.join(static_dir, "interview_test.html"))
 
 if __name__ == "__main__":
     init_db()
