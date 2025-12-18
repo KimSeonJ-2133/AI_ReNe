@@ -30,6 +30,7 @@ class JobseekerProfileResponseDto(BaseModel):
     gender: str
     profile_image_url: Optional[str] = None # 추후 구현
     brief_introduction: Optional[str] = None
+    links: List[Dict[str, str]] = [] # [{"type": "github", "url": "..."}, ...]
 
     # Stats / Levels
     ncs_level: Optional[int] = None

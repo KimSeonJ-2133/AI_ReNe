@@ -16,4 +16,9 @@ async def read_root():
 
 @view_router.get("/profile")
 async def read_profile():
-    return FileResponse(os.path.join(STATIC_DIR, "profile.html"))
+    response = FileResponse(os.path.join(STATIC_DIR, "profile.html"))
+    # 브라우저 캐시 방지 헤더 추가
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response

@@ -47,12 +47,22 @@ def get_jobseeker_profile(
     certifications_list = []
     skills_list = []
     projects_list = []
+    links_list = [] # Social Links
     brief_intro = "아직 자기소개가 없습니다."
 
     # 이력서 데이터 매핑
     if latest_resume:
         brief_intro = latest_resume.brief_self_introduction or brief_intro
         
+        # 임시: 이력서 내용에 링크가 있다면 추출하거나, 별도 필드가 없으므로 데모용 더미 데이터 추가 가능
+        # 여기서는 데모를 위해 user_id가 1인 경우에만 더미 링크 추가 (실제로는 DB 컬럼 필요)
+        if user_id == 1 or user_id == 8: # 8번 유저도 테스트용
+            links_list = [
+                {"type": "github", "url": "https://github.com/wanted-rene"},
+                {"type": "blog", "url": "https://velog.io/@rene"},
+                {"type": "linkedin", "url": "https://linkedin.com/in/rene"}
+            ]
+
         # JSON 필드가 리스트인지 확인 후 할당
         if isinstance(latest_resume.education, list):
             education_list = latest_resume.education
@@ -63,17 +73,7 @@ def get_jobseeker_profile(
         if isinstance(latest_resume.certifications, list):
             certifications_list = latest_resume.certifications
             
-        # Resume에도 skills가 있을 수 있음
-        if isinstance(latest_resume.skills, list):
-            for skill in latest_resume.skills:
-                if isinstance(skill, str):
-                    skills_list.append(skill)
-                elif isinstance(skill, dict):
-                    # 딕셔너리인 경우 처리 (예: {"name": "Python", "level": "High"})
-                    if "name" in skill:
-                        skills_list.append(str(skill["name"]))
-                    elif "skill" in skill:
-                        skills_list.append(str(skill["skill"]))
+        # Resume skills는 제외 (Portfolio main_skills만 사용)
 
     # 포트폴리오 데이터 매핑
     if latest_portfolio:
@@ -119,7 +119,8 @@ def get_jobseeker_profile(
         education=education_list,
         career=career_list,
         certifications=certifications_list,
-        projects=projects_list
+        projects=projects_list,
+        links=links_list
     )
 
     return profile_dto
