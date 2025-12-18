@@ -154,6 +154,7 @@ class CompanyAIInterviewAgent:
             "current_stage": current_stage,
             "last_evaluation_result": last_eval.get("result", "NONE"),
             "follow_up_needed": last_eval.get("follow_up_needed", False),
+            "ncs_level": 5,
             "messages": state["messages"]
         })
 
