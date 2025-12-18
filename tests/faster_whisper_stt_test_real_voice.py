@@ -58,5 +58,5 @@ def run_real_audio_benchmark(file_path):
 
 if __name__ == "__main__":
     # 테스트할 파일명을 여기에 입력하세요
-    target_file = "./tests/test_data/test.m4a" 
+    target_file = "./tests/test_data/test3.m4a" 
     run_real_audio_benchmark(target_file)
