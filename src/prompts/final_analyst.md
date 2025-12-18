@@ -39,20 +39,24 @@
 # 출력 형식 (JSON Strict)
 반드시 아래 키(Key) 이름을 사용하여 JSON을 생성하십시오.
 
-{
+{{
   "final_score": <float>,
   "interview_result": "PASS" | "HOLD" | "FAIL",
   "summary": "<string>",
   "detailed_report": "<string>",
   "skills_evaluation": [
-    {
+    {{
       "skill_name": "Python",
       "score": 7,
       "reason": "제너레이터의 작동 원리를 정확히 설명하고 최적화 경험을 제시함."
-    },
-    // ... 추가 스킬
+    }},
+    {{
+       "skill_name": "소통능력",
+       "score": 8,
+       "reason": "..."
+    }}
   ],
   "best_answer": "<string>",
   "worst_answer": "<string>",
   "total_feedback_for_jobseeker": "<string>"
-}
+}}

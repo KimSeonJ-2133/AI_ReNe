@@ -46,4 +46,7 @@ dependencies = [
     "bs4>=0.0.2",
     "reportlab>=4.4.5",
     "langchain-text-splitters>=1.1.0",
+    "langgraph-checkpoint-sqlite>=3.0.1",
+    "aiosqlite>=0.22.0",
+    "pydub>=0.25.1",
 ]

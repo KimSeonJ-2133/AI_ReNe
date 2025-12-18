@@ -232,7 +232,7 @@
         try {
             // base64 문자열에 헤더가 없다면 추가 (백엔드 출력 형식에 따라 다름)
             // 보통 base64.b64encode 결과만 온다면 prefix 필요
-            const audioSrc = `data:audio/mp3;base64,${base64String}`; 
+            const audioSrc = `data:audio/wav;base64,${base64String}`; 
             const audio = new Audio(audioSrc);
             audio.play().catch(e => console.error("오디오 재생 실패:", e));
         } catch (e) {
