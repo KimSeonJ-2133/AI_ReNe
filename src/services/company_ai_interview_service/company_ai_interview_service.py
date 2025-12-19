@@ -99,6 +99,7 @@ class CompanyAIInterviewService:
         if ai_state.get("messages"):
             last_message = ai_state["messages"][-1] # LangChain Message 객체
             last_message_content = last_message.content
+            print(f"AI 면접관 질문: {last_message_content}")
             
             # DB의 chat_history(JSON)에 AI의 첫 질문 기록
             # LangGraph의 messages는 객체이므로 JSON 직렬화 가능한 dict로 변환해 저장해야 함
@@ -186,7 +187,9 @@ class CompanyAIInterviewService:
         last_ai_message = ""
         if ai_state.get("messages"):
             last_ai_message = ai_state["messages"][-1].content
-        
+            # AI 답변 출력
+            print(f"AI 면접관 질문: {last_ai_message}")
+
         ai_entry = {
             "role": "ai", 
             "content": last_ai_message, 
@@ -204,13 +207,15 @@ class CompanyAIInterviewService:
             
             # 4-1 세션 상태 업데이트
             session_record.status = "COMPLETED"
-            
+
             # 4-2. 결과 테이블(Result) 저장
             db_payload = ai_state.get("db_payload")
             if db_payload:
                 # 외래키 주입 (어떤 세션의 결과인지)
                 db_payload["session_id"] = session_id 
-                self.interview_repo.create(db_payload)
+                interview_result = self.interview_repo.create(db_payload)
+
+                created_result_id = interview_result.id
             
             # 4-3. 트랜잭션 커밋
             self.session_repo.update(session_record) # update 내부에서 commit 수행
@@ -229,7 +234,8 @@ class CompanyAIInterviewService:
                 interview_stage="CLOSING",
                 ai_message=closing_ment,
                 status="done",
-                ai_audio_base64=ai_audio_base64
+                ai_audio_base64=ai_audio_base64,
+                interview_result_id=created_result_id
             )
 
         # 5. Update Session - 진행 중 상태 업데이트
@@ -288,3 +294,30 @@ class CompanyAIInterviewService:
 
         # 4. 변환된 텍스트로 'process_user_answer' 호출
         return await self.process_user_answer(session_id, transcribed_text)
+    
+    async def get_interview_result_by_interview_id(self, company_ai_interview_id: int) -> company_ai_interview_response_dto.InterviewResultResponse:
+        interview_result = self.interview_repo.get_by_id(company_ai_interview_id)
+        if not interview_result:
+            raise HTTPException(status_code=404, detail="해당 id의 InterviewResult를 찾을 수 없습니다.")
+
+        # 날짜 포맷팅 로직 (YYYY.MM.DD HH:MM 형식)
+        formatted_end_time = None
+        if interview_result.end_time:
+            formatted_end_time = interview_result.end_time.strftime("%Y.%m.%d %H:%M")
+
+        return company_ai_interview_response_dto.InterviewResultResponse(
+            message="200 OK, 인터뷰 결과.",
+            interview_id = company_ai_interview_id,
+            session_id=interview_result.session_id,
+            jobseeker_id = interview_result.jobseeker_id,
+            job_group_id = interview_result.job_group_id,
+            report = interview_result.report,
+            summary = interview_result.summary,
+            total_score = interview_result.total_score,
+            skills_evaluation = interview_result.skills_evaluation,
+            ai_result = interview_result.ai_result,
+            best_answer = interview_result.best_answer,
+            worst_answer = interview_result.worst_answer,
+            total_advice = interview_result.total_advice,
+            end_time = formatted_end_time
+        )

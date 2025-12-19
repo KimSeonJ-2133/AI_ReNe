@@ -54,6 +54,11 @@ if os.path.exists(data_dir):
     app.mount("/data", StaticFiles(directory=data_dir), name="data")
 
 
+@app.get("/company/ai-interview/report")
+async def read_report():
+    # FileResponse(파일경로) 형태로 작성
+    return FileResponse(os.path.join(static_dir, "company_ai_interview_result.html"))
+
 if __name__ == "__main__":
     init_db()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

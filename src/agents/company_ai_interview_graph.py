@@ -15,6 +15,7 @@ import aiosqlite
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from pathlib import Path    
 from dotenv import load_dotenv
+import json
 load_dotenv()
 
 current_path = Path(__file__).resolve()
@@ -153,6 +154,7 @@ class CompanyAIInterviewAgent:
             "current_stage": current_stage,
             "last_evaluation_result": last_eval.get("result", "NONE"),
             "follow_up_needed": last_eval.get("follow_up_needed", False),
+            "ncs_level": 5,
             "messages": state["messages"]
         })
 
@@ -228,13 +230,17 @@ class CompanyAIInterviewAgent:
         # ... (기존 로직과 동일, Payload 구성) ...
         transcript = "\n".join([f"{msg.type}: {msg.content}" for msg in state["messages"]])
         
+        # 앞선 평가 히스토리 문자열로 반환
+        eval_history = state.get("evaluation_history", [])
+        eval_history_str = json.dumps(eval_history, ensure_ascii=False, indent=2)
+
         parser = PydanticOutputParser(pydantic_object=FinalAnalystOutput)
         analyst_prompt = self._load_prompt("final_analyst.md")
         
         prompt = ChatPromptTemplate.from_messages([
             ("system", analyst_prompt),
             ("system", "반드시 다음 형식 요구사항을 준수하여 JSON만 출력하세요:\n{format_instructions}"),
-            ("human", "전사본\n{full_transcript}")
+            ("human", "전체 면접 기록\n{full_transcript}")
         ])
         
         chain = prompt | self.llm | parser
@@ -243,7 +249,9 @@ class CompanyAIInterviewAgent:
             final_result = chain.invoke({
                 "full_transcript": transcript,
                 "company_name": state.get("company_name", ""),
+                "jobseeker_name": state.get("jobseeker_name", ""),
                 "jd_context": state.get("jd_context", ""),
+                "evaluation_history_context": eval_history_str,
                 "format_instructions": parser.get_format_instructions()
             })
             final_result = final_result.dict()
@@ -350,3 +358,4 @@ class CompanyAIInterviewAgent:
             # invoke(None) 호출하면 원래 START부터 다시 시작하지만 start_route 로직에 의해 메시지가 있으면 Evaluator로 이동
             return await graph.ainvoke({"messages": [input_message]}, config)
 
+    
