@@ -14,6 +14,11 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 async def read_root():
     return FileResponse(os.path.join(STATIC_DIR, "interview_test.html"))
 
+@view_router.get("/company/ai-interview/report")
+async def read_report():
+    # FileResponse(파일경로) 형태로 작성
+    return FileResponse(os.path.join(STATIC_DIR, "company_ai_interview_result.html"))
+
 @view_router.get("/profile")
 async def read_profile():
     response = FileResponse(os.path.join(STATIC_DIR, "profile.html"))

@@ -154,7 +154,7 @@ class CompanyAIInterviewAgent:
             "current_stage": current_stage,
             "last_evaluation_result": last_eval.get("result", "NONE"),
             "follow_up_needed": last_eval.get("follow_up_needed", False),
-            "ncs_level": 5,
+            "ncs_level": 4,
             "messages": state["messages"]
         })
 
@@ -283,6 +283,7 @@ class CompanyAIInterviewAgent:
             
             # DB의 skills_evaluation 컬럼은 JSON 타입이므로 리스트(List[dict]) 그대로 저장하면 됩니다.
             "skills_evaluation": final_result["skills_evaluation"],
+            "full_transcript": transcript
         }
             
         return {

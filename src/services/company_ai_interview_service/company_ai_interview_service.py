@@ -120,7 +120,7 @@ class CompanyAIInterviewService:
         self.session_repo.update(new_session)
 
         # 6. Response - TTS 변환 후 프론트엔드 반환
-        ai_audio_bytes = tts_service.speak(last_message_content)
+        ai_audio_bytes = tts_service.speak(last_message_content) #None
 
         ai_audio_base64 = None
         if ai_audio_bytes:
@@ -221,7 +221,7 @@ class CompanyAIInterviewService:
             self.session_repo.update(session_record) # update 내부에서 commit 수행
 
             closing_ment = "면접이 모두 종료되었습니다. 수고하셨습니다."
-            ai_audio_bytes = tts_service.speak(closing_ment)
+            ai_audio_bytes = tts_service.speak(closing_ment) # None
 
             ai_audio_base64 = None
             if ai_audio_bytes:
@@ -246,7 +246,7 @@ class CompanyAIInterviewService:
         self.session_repo.update(session_record)
 
         # 6. TTS - (Optional) 음성 변환
-        ai_audio_bytes = tts_service.speak(last_ai_message)
+        ai_audio_bytes = tts_service.speak(last_ai_message) # None
 
         ai_audio_base64 = None
         if ai_audio_bytes:
@@ -321,3 +321,13 @@ class CompanyAIInterviewService:
             total_advice = interview_result.total_advice,
             end_time = formatted_end_time
         )
+
+    async def _update_jobseekre_info(self, jobseeker_id: int):
+        """
+        기업 AI 면접
+        """
+        jobseeker = self.jobseeker_repo.get_by_id(jobseeker_id)
+        jobseeker.ncs_level = datetime.now()
+        self.jobseeker_repo.update(jobseeker)
+
+        return ""
