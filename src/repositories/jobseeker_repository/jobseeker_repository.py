@@ -17,38 +17,47 @@ class JobseekerRepository:
         self.db.refresh(jobseeker)
         return jobseeker
     
-    def get_jobseeker_basic_info(self, jobseeker_id: int):
-        """구직자 기본 정보 반환"""
+    def update(self, jobseeker: Jobseeker) -> Jobseeker:
+        self.db.add(jobseeker)
+        self.db.commit()
+        self.db.refresh(jobseeker)
+        return jobseeker
+    
+    def get_by_id(self, jobseeker_id: int) -> Jobseeker | None:
         return self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
+    
+    # def get_jobseeker_basic_info(self, jobseeker_id: int):
+    #     """구직자 기본 정보 반환"""
+    #     return self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
     
     def get_name(self, jobseeker_id: int) -> str:
         jobseeker = self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
         return jobseeker.name
     
     def get_info_as_markdown(self, jobseeker_id: int) -> str:
-        js = (
+        jobseeker = (
             self.db.query(Jobseeker)
             .filter(Jobseeker.id == jobseeker_id)
             .first()
         )
 
-        if not js:
+        if not jobseeker:
             return "구직자 정보를 찾을 수 없습니다."
         
         # None 값일 경우 '정보 없음' 등으로 처리
-        mbti = js.mbti if js.mbti else "정보 없음"
-        ncs = js.ncs_level if js.ncs_level else "미측정"
-        rcs = js.rcs_level if js.rcs_level else "미측정"
-        talent = js.talent_type if js.talent_type else "미정"
+        mbti = jobseeker.mbti if jobseeker.mbti else "정보 없음"
+        ncs = jobseeker.ncs_level if jobseeker.ncs_level else "미측정"
+        rcs = jobseeker.rcs_level if jobseeker.rcs_level else "미측정"
+        talent = jobseeker.talent_type if jobseeker.talent_type else "미정"
 
         markdown_text = f"""
 ## 구직자 기본 프로필
-- **이름**: {js.name}
-- **이메일**: {js.email}
-- **연락처**: {js.phone}
-- **생년월일**: {js.birthdate} ({js.gender})
-- **주소**: {js.address}
-- **인증 뱃지**: {js.verification_badge}
+- **이름**: {jobseeker.name}
+- **이메일**: {jobseeker.email}
+- **연락처**: {jobseeker.phone}
+- **생년월일**: {jobseeker.birthdate} ({jobseeker.gender})
+- **주소**: {jobseeker.address}
+- **인증 뱃지**: {jobseeker.verification_badge}
 - **MBTI**: {mbti}
 
 ### 역량 및 유형 정보

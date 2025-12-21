@@ -39,4 +39,5 @@ dist/
 
 # 9. 모델
 data/models/
+data/sqlite_saver/
 data/datasets/audio/
