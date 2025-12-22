@@ -13,11 +13,12 @@ class CompanyAIInterviewRepository:
         딕셔너리 데이터를 받아서 CompanyAIInterview 엔티티를 생성하고 저장
         """
         try:
-            # DTO 변환이나 데이터 매핑 로직
+            # 데이터 매핑 로직
             interview = CompanyAIInterview(
                 jobseeker_id=interview_data["jobseeker_id"],
                 job_group_id=interview_data["job_group_id"],
                 session_id=interview_data["session_id"],
+                full_transcript=interview_data["full_transcript"],
                 report=interview_data["report"],
                 summary=interview_data["summary"],
                 total_score=interview_data["total_score"],
