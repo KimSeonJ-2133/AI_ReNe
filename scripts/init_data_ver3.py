@@ -69,7 +69,6 @@ def init_rdb_and_vector_db():
     print("데이터 초기화 완료...")
 
     try:
-
         # 기업 소개서 (Company Introduction)
         company_introduction = CompanyIntroduction(
             company_id=2,
@@ -80,7 +79,6 @@ def init_rdb_and_vector_db():
         db.refresh(company_introduction)
         print("기업소개서 삽입 완료...")
         
-
     except Exception as e:
         print(f"기업소개서 삽입 중 오류 발생: {e}")
 
