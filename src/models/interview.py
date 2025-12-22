@@ -28,8 +28,9 @@ class ReneInterview(Base):
         Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False
     )  # 외래키
     interview_type = Column(String(50), nullable=False) # Beginning, Growth, Trials
+    full_transcript = Column(LONGTEXT, nullable=True)
     report = Column(LONGTEXT, nullable=False) # 사용자에게 보여줄 면접 보고서
-    summary = Column(LONGTEXT, nullable=False)
+    summary = Column(Text, nullable=False)
     end_time = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -80,7 +81,12 @@ class GrowthReneDetail(Base):
     id = Column(
         Integer, ForeignKey("rene_interview.id", ondelete="CASCADE"), primary_key=True
     )
-    project_details = Column(JSON, nullable=False)
+    total_score = Column(Float, nullable=False)
+    skills_evaluation = Column(JSON, nullable=True) # 면접자가 말했던 기술들에 대한 레벨을 평가한 JSON
+    ai_result = Column(String(20), nullable=False)  # PASS, FAIL, HOLD
+    best_answer = Column(Text, nullable=False)
+    worst_answer = Column(Text, nullable=False)
+    total_advice = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     rene_interview = relationship("ReneInterview", back_populates="growth_rene_detail")
@@ -103,6 +109,37 @@ class TrialsReneDetail(Base):
 
     rene_interview = relationship("ReneInterview", back_populates="trials_rene_detail")
 
+# class ReneInterviewSession(Base):
+#     __tablename__ = "rene_interview_session"
+
+#     # UUID를 사용하여 예측 불가능한 세션 ID 생성 (보안상 추천)
+#     session_id = Column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))
+    
+#     # 어떤 구직자의 면접인가?
+#     jobseeker_id = Column(Integer, ForeignKey("jobseeker.id", ondelete="CASCADE"), nullable=False)
+    
+#     # 어떤 직군에 대한 면접인가? (질문 생성을 위해 필요)
+#     job_group_id = Column(Integer, ForeignKey("job_group.id", ondelete="CASCADE"), nullable=False)
+
+#     # --- 진행 상태 관리 ---
+#     status = Column(String(20), default="IN_PROGRESS") # 진행중, 완료, 에러 등
+#     current_turn = Column(Integer, default=0) # 현재 턴 수 (예: 5/10)
+#     interview_stage = Column(String(50), default="INTRO") # 현재 단계 (자기소개, 기술면접 등)
+    
+#     # --- 대화 기록 (LangGraph Memory 역할) ---
+#     # 방법 1: JSON으로 통째로 저장 (간편함, MySQL/Postgres 지원)
+#     # 대화 내용: [{"role": "ai", "content": "..."}, {"role": "user", "content": "..."}]
+#     chat_history = Column(JSON, nullable=True) 
+
+#     # --- 메타 데이터 ---
+#     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+#     updated_at = Column(DateTime, onupdate=func.now())
+
+#     # 관계 설정
+#     jobseeker = relationship("Jobseeker")
+#     # 나중에 결과 테이블과 1:1로 매핑될 수 있음
+#     result = relationship("CompanyAIInterview", back_populates="session", uselist=False)
+
 
 # 5. 기업 AI 면접
 class CompanyAIInterview(Base):
@@ -118,7 +155,7 @@ class CompanyAIInterview(Base):
     session_id = Column(
         String(255), ForeignKey("company_ai_interview_session.session_id"), nullable=False
     )
-    
+    full_transcript = Column(LONGTEXT, nullable=True)
     report = Column(LONGTEXT, nullable=False)
     summary = Column(Text, nullable=False)
     total_score = Column(Float, nullable=False)

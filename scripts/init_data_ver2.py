@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import date
 from dotenv import load_dotenv
 from sqlalchemy import text
+
 # [Path 설정] 기존 코드 유지
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from src.core.database import SessionLocal, engine, Base

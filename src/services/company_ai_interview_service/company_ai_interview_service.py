@@ -12,6 +12,7 @@ from src.repositories.recruitment_notice_repository.recruitment_notice_repositor
 from src.repositories.company_introduction_repository.company_introduction_repository import CompanyIntroductionRepository
 from src.repositories.jobseeker_repository.jobseeker_repository import JobseekerRepository
 from src.repositories.company_ai_interview_repository.company_ai_interview_repository import CompanyAIInterviewRepository
+from src.repositories.job_group_repository.job_group_repository import JobGroupRepository
 from src.agents.company_ai_interview_graph import CompanyAIInterviewAgent
 from src.services.stt_service.faster_whisper_service import stt_service
 from src.services.tts_service.elevenlabs_tts_service import tts_service
@@ -24,6 +25,7 @@ class CompanyAIInterviewService:
     def __init__(self, db: Session):
         self.db = db
         self.company_repo = CompanyRepository(db)
+        self.job_group_repo = JobGroupRepository(db)
         self.jobseeker_repo = JobseekerRepository(db)
         self.resume_repo = ResumeRepository(db)
         self.portfolio_repo = PortfolioRepository(db)
@@ -53,6 +55,7 @@ class CompanyAIInterviewService:
         
         context_data = {
             "company_name": self.company_repo.get_name(request.company_id),
+            "job_group_name": self.job_group_repo.get_name_by_id(request.job_group_id),
             "jobseeker_name": self.jobseeker_repo.get_name(request.jobseeker_id),
             "company_info": self.company_repo.get_info_as_markdown(request.company_id),
             "jobseeker_info": self.jobseeker_repo.get_info_as_markdown(request.jobseeker_id),
@@ -220,7 +223,7 @@ class CompanyAIInterviewService:
             # 4-3. 트랜잭션 커밋
             self.session_repo.update(session_record) # update 내부에서 commit 수행
 
-            closing_ment = "면접이 모두 종료되었습니다. 수고하셨습니다."
+            closing_ment = "면접이 모두 종료되었습니다. 면접자님 수고하셨습니다. 최종 결과를 확인해주세요."
             ai_audio_bytes = tts_service.speak(closing_ment) # None
 
             ai_audio_base64 = None
