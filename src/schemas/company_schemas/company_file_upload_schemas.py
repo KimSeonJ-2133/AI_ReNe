@@ -70,3 +70,22 @@ class JRSErrorResponse(BaseModel):
             }
         }
     )
+
+
+class CompanyIntroUploadResponse(BaseModel):
+    """
+    기업 소개서 파일 업로드 성공 시 응답 모델
+    """
+    file_id: str = Field(..., description = "생성된 파일 고유 ID")
+    markdown_content: str = Field(..., description = "추출된 마크다운 내용")
+    created_at: str = Field(..., description = "생성 시간 (ISO 8601 형식)")
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "file_id": "comp_intro_20241126_143022",
+                "markdown_content": "# Company Introduction\nWe are...",
+                "created_at": "2024-11-26T14:30:22.123456"
+            }
+        }
+    )

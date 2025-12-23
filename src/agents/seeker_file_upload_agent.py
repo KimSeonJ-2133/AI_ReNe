@@ -69,6 +69,7 @@ def parse_resume_with_llm(text_content: str, file_type: str = "resume") -> Dict[
         # NCS/RCS 레벨 추출
         ncs_level = extract_ncs_level(final_analysis_md)
         rcs_level = extract_rcs_level(final_analysis_md)
+        talent_type = extract_talent_type(final_analysis_md)
         
         # 섹션별 데이터 파싱 (Analyzer 결과 기반)
         parsed_data = parse_markdown_sections(final_analysis_md)
@@ -76,6 +77,7 @@ def parse_resume_with_llm(text_content: str, file_type: str = "resume") -> Dict[
         return {
             "ncs_level": ncs_level,
             "rcs_level": rcs_level,
+            "talent_type": talent_type,
             "markdown_content": final_analysis_md,
             "parsed_data": parsed_data
         }
@@ -107,6 +109,18 @@ def extract_rcs_level(markdown_text: str) -> str:
     if match:
         return match.group(1).strip()
     return "Unknown"
+
+
+def extract_talent_type(markdown_text: str) -> str:
+    """
+    Markdown에서 Talent Type 추출
+    Format: - **Talent Type:** **{TYPE}**
+    """
+    pattern = r'-\s*\*\*Talent Type:\*\*\s*\*\*(.+?)\*\*'
+    match = re.search(pattern, markdown_text)
+    if match:
+        return match.group(1).strip()
+    return "LEARNER" # 기본값
 
 
 def parse_markdown_sections(markdown_text: str) -> Dict[str, Any]:

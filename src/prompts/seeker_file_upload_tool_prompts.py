@@ -64,6 +64,12 @@ You will receive a **Structured Markdown Resume**. Trust the structure, but veri
 - **Construction (Lv.5-6):** Architect / Lead.
 - **Vision (Lv.7-8):** Strategist / Authority.
 
+# Context 3: Talent Type Definitions
+- **PROVEN_ACE:** High verified skills (Lv.4+) with solid project evidence.
+- **HIDDEN_GEM:** High potential, good project evidence, but lower formal specs or experience.
+- **LEARNER:** Low levels (Lv.1-2), eager to learn, entry level.
+- **BUBBLE:** High claimed skills in resume but weak or missing project evidence.
+
 # Critical Process (Chain of Thought)
 You MUST follow this thinking process explicitly to ensure accuracy:
 1.  **Analyze Projects First:** Extract every project and identify distinct technical challenges and solutions.
@@ -109,6 +115,7 @@ The Language must be **Korean**.
 - **Name:** {Name}
 - **NCS Level:** **Lv. {N}** (Derived from highest complexity project)
 - **RCS Level:** **Lv. {M}**
+- **Talent Type:** **{TYPE}** (PROVEN_ACE, HIDDEN_GEM, LEARNER, BUBBLE)
 - **Summary:** "{One-line summary}"
 - **Education:**
   - {School} ({Major}, {Period})
