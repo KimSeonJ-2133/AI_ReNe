@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 from src.api.deps import get_db
 from src.models.user import Jobseeker
 from src.models.document import Resume, Portfolio
-from src.schemas.jobseeker_schemas.jobseeker_profile_dto import JobseekerProfileResponseDto
+from src.schemas.jobseeker_schemas.jobseeker_profile_dto import JobseekerProfileResponseDto, JobseekerStatsUpdateRequest
 
 profile_router = APIRouter(tags=["Jobseeker Profile"])
 
@@ -124,3 +124,29 @@ def get_jobseeker_profile(
     )
 
     return profile_dto
+
+
+@profile_router.patch("/jobseeker/profile/{user_id}/stats")
+def update_jobseeker_stats(
+    user_id: int,
+    request: JobseekerStatsUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    구직자 NCS, RCS 레벨 및 인재 유형 업데이트
+    """
+    jobseeker = db.query(Jobseeker).filter(Jobseeker.id == user_id).first()
+    if not jobseeker:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    if request.ncs_level is not None:
+        jobseeker.ncs_level = request.ncs_level
+    if request.rcs_level is not None:
+        jobseeker.rcs_level = request.rcs_level
+    if request.talent_type is not None:
+        jobseeker.talent_type = request.talent_type
+        
+    db.commit()
+    db.refresh(jobseeker)
+    
+    return {"message": "Stats updated successfully", "ncs_level": jobseeker.ncs_level, "rcs_level": jobseeker.rcs_level, "talent_type": jobseeker.talent_type}

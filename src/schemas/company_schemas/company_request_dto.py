@@ -13,3 +13,7 @@ class CompanySignupRequestDto(BaseModel):
     address: str
     business_number: str
     policy_agree_bool: bool = False
+
+class JobGroupCreateRequest(BaseModel):
+    company_id: int
+    name: str

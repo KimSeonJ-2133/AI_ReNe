@@ -80,41 +80,18 @@ async def get_p2p_audio_chunk2():
 @p2p_router.post("/audio-check", response_model=P2PChunkResponseDto)
 async def upload_p2p_session_audio(
     file: UploadFile = File(...),
-    speaker_role: str = Form(...)
+    speaker_role: str = Form(...),
+    jobseeker_id: Optional[int] = Form(None)
 ):
     """
     [P2P] 실시간 오디오 청크 업로드 (PCM)
     - 화자별 버퍼링 및 STT 처리 (단일 세션)
-    - 파일명에서 username 추출하여 세션에 저장 (예: 01_jobplz.mp3 -> jobplz)
+    - jobseeker_id를 받아 세션에 매핑
     """
-    # 파일명에서 username 추출 (예: 01_jobplz.mp3 -> jobplz)
-    # 규칙: {순서}_{username}.{확장자} 또는 {username}.{확장자}
-    filename = file.filename
-    username = None
-    
-    try:
-        name_without_ext = os.path.splitext(filename)[0]
-        parts = name_without_ext.split('_')
-        
-        # 01_jobplz 형태인 경우
-        if len(parts) >= 2:
-            # 숫자가 아닌 부분이 username일 가능성이 높음
-            # 하지만 여기서는 단순하게 두 번째 부분을 username으로 가정하거나
-            # speaker_role이 'candidate'일 때만 추출하는 등의 로직이 필요할 수 있음
-            # 우선은 뒤쪽 부분을 username으로 사용
-            username = parts[-1]
-        else:
-            # jobplz.mp3 형태인 경우
-            username = name_without_ext
-            
-        # 추출된 username을 p2p_service에 전달 (세션에 저장하기 위함)
-        # 하지만 process_p2p_audio_chunk는 현재 username 인자가 없음
-        # 따라서 p2p_service.py 수정이 필요함.
-        # 우선은 서비스 호출 시 username을 전달하도록 수정 예정
-    except Exception as e:
-        print(f"[P2P API] Username extraction failed: {e}")
+    # jobseeker_id를 문자열로 변환하여 서비스에 전달
+    user_identifier = str(jobseeker_id) if jobseeker_id else None
 
-    return await p2p_service.process_p2p_audio_chunk(file, speaker_role, username)
+    return await p2p_service.process_p2p_audio_chunk(file, speaker_role, user_identifier)
 
 @p2p_router.get("/report")
 async def generate_p2p_report():
