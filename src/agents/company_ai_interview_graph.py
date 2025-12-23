@@ -70,6 +70,7 @@ class SkillDetail(BaseModel):
 # 최종 분석 & 평가를 위한 모델 정의
 class FinalAnalystOutput(BaseModel):
     final_score: float = Field(description="종합 점수 (0-100)")
+    rcs_level: int = Field(description="RCS 점수 (1~8 사이의 정수)")
     interview_result: str = Field(description="PASS, HOLD, FAIL 중 하나")
     summary: str = Field(description="면접 한 줄 요약")
     detailed_report: str = Field(description="면접 상세 보고서")
