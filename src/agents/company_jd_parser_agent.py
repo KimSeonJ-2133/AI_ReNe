@@ -3,11 +3,44 @@
 """
 
 import re
+import json
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
 
 from src.core.config import settings
-from src.prompts.company_jd_parser_prompts import COMPANY_JD_PARSER_SYSTEM_PROMPT
+from src.prompts.company_jd_parser_prompts import COMPANY_JD_PARSER_SYSTEM_PROMPT, COMPANY_DOC_CLASSIFIER_PROMPT
+
+
+def classify_company_doc(text_content: str) -> Dict[str, Any]:
+    """
+    문서 내용을 분석하여 기업 소개서인지 채용 공고인지 분류
+    
+    Returns:
+        {
+            "doc_type": "COMPANY_INTRO" | "RECRUITMENT_NOTICE",
+            "job_group": str | None
+        }
+    """
+    llm = ChatOpenAI(
+        model="gpt-4.1-mini",
+        temperature=0.0,
+        api_key=settings.OPENAI_API_KEY,
+        model_kwargs={"response_format": {"type": "json_object"}}
+    )
+    
+    messages = [
+        {"role": "system", "content": COMPANY_DOC_CLASSIFIER_PROMPT},
+        {"role": "user", "content": f"Document Content:\n{text_content[:3000]}"} # 앞부분 3000자만 분석
+    ]
+    
+    try:
+        response = llm.invoke(messages)
+        result = json.loads(response.content)
+        return result
+    except Exception as e:
+        print(f"[Agent Error] 문서 분류 실패: {e}")
+        # 기본값: 채용 공고로 가정하고 직군 없음
+        return {"doc_type": "RECRUITMENT_NOTICE", "job_group": "Unknown"}
 
 
 def parse_jd_with_llm(text_content: str, file_type: str = "text") -> Dict[str, Any]:

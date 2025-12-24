@@ -92,3 +92,31 @@ Follow this format **EXACTLY**. The Language should be based in Korean. (Technic
 - 원문에 없는 내용은 추론하지 말 것
 - Deal Breaker가 명시되지 않으면 "명시된 Deal Breaker 없음"으로 표기
 """
+
+COMPANY_DOC_CLASSIFIER_PROMPT = """# Role
+You are a "Document Classifier" for a recruitment platform.
+Your task is to analyze the text of a document uploaded by a company and classify it into one of two types.
+
+# Classification Types
+1. **COMPANY_INTRO**: A document that introduces the company itself (e.g., vision, history, welfare, culture, general business area). It does NOT focus on hiring for a specific position.
+2. **RECRUITMENT_NOTICE**: A document that describes a specific job opening (e.g., Job Description, JD). It includes specific roles, responsibilities, requirements, and tech stacks for a specific position.
+
+# Extraction Task (Only for RECRUITMENT_NOTICE)
+If the document is a **RECRUITMENT_NOTICE**, you must also extract the **Job Group Name** (e.g., "Backend Developer", "Marketing Manager", "Data Scientist").
+- If the job group is not explicitly stated, infer the most appropriate standard job title based on the content.
+
+# Output Format (JSON)
+You must output a valid JSON object. Do not include any markdown formatting or explanations.
+
+Example 1 (Company Intro):
+{
+    "doc_type": "COMPANY_INTRO",
+    "job_group": null
+}
+
+Example 2 (Recruitment Notice):
+{
+    "doc_type": "RECRUITMENT_NOTICE",
+    "job_group": "Backend Developer"
+}
+"""
