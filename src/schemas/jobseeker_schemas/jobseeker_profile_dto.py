@@ -52,3 +52,9 @@ class JobseekerProfileResponseDto(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class JobseekerStatsUpdateRequest(BaseModel):
+    ncs_level: Optional[int] = None
+    rcs_level: Optional[int] = None
+    talent_type: Optional[str] = None

@@ -86,6 +86,7 @@ async def process_file_upload(
         
         ncs_level_int = extract_level_number(parsing_result['ncs_level'])
         rcs_level_int = extract_level_number(parsing_result['rcs_level'])
+        talent_type_str = parsing_result.get('talent_type', 'LEARNER')
         
         # 7. DB 저장 (활성화)
         if db:
@@ -99,6 +100,11 @@ async def process_file_upload(
                     status_code=404,
                     detail=f"구직자 정보를 찾을 수 없습니다. (ID: {user_id})"
                 )
+            
+            # Jobseeker Stats 업데이트
+            jobseeker.ncs_level = ncs_level_int
+            jobseeker.rcs_level = rcs_level_int
+            jobseeker.talent_type = talent_type_str
             
             # 1. Resume 저장
             resume_record = Resume(

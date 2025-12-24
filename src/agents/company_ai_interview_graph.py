@@ -123,10 +123,10 @@ class CompanyAIInterviewAgent:
         is_stage_change_turn = current_turn in [2, 5, 8] # 예: 스테이지가 바뀌는 턴
 
         last_eval = eval_history[-1]["eval"] if eval_history else {}
-        if last_eval.get("follow_up_needed") and not is_stage_change_turn:
-            guidance = "!지침: 이전 답변이 불충분합니다. 압박 질문(Probing Question)을 던지세요."
-        else:
-            guidance = f"지침: 현재 스테이지[{current_stage}]에 알맞은 새로운 질문을 던지세요."
+        # if last_eval.get("follow_up_needed") and not is_stage_change_turn:
+        #     guidance = "!지침: 이전 답변이 불충분합니다. 압박 질문(Probing Question)을 던지세요."
+        # else:
+        guidance = f"지침: 현재 스테이지[{current_stage}]에 알맞은 새로운 질문을 던지세요."
 
         rag_context = f"""
         [기업 정보] 
@@ -135,8 +135,10 @@ class CompanyAIInterviewAgent:
         {state.get('jobseeker_info')}
         [이력서] 
         {state.get('resume_context')}
-        [포트폴리오] 
+        [포트폴리오]
         {state.get('portfolio_context')}
+        [기업 소개서]
+        {state.get('company_introduction_context')}
         [채용공고] 
         {state.get('jd_context')}
         """
@@ -150,6 +152,7 @@ class CompanyAIInterviewAgent:
         chain = prompt | self.llm
         response = chain.invoke({
             "company_name": state.get("company_name"),
+            "job_group_name": state.get("job_group_name"),
             "user_name": state.get("jobseeker_name"),
             "current_stage": current_stage,
             "last_evaluation_result": last_eval.get("result", "NONE"),
@@ -189,6 +192,8 @@ class CompanyAIInterviewAgent:
             eval_result = chain.invoke({
                 "question_text":last_ai_msg,
                 "answer_text": last_human_msg,
+                "jd_context": state.get("jd_context", ""),
+
                 "format_instructions": parser.get_format_instructions()
             })
             eval_dict = eval_result.dict()
