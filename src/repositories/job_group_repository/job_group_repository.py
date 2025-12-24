@@ -14,3 +14,14 @@ class JobGroupRepository:
             .first()
         )
         return job_group.name
+    
+    
+    def get_by_company_id(self, company_id: int) -> int | None:
+        job_group = (
+            self.db.query(JobGroup)
+            .filter(JobGroup.company_id == company_id)
+            .order_by(JobGroup.created_at.desc())
+            .first()
+        )
+
+        return job_group

@@ -10,6 +10,7 @@ class CompanyResponseDto(BaseModel):
 class CompanyLoginResponseDto(BaseModel):
     message: str 
     company_id: int
+    job_group_id: int
     name: str
     email: str
     user_type: str = "company"

@@ -13,11 +13,12 @@ from src.schemas.jobseeker_schemas.jobseeker_request_dto import JobseekerSignupR
 from src.schemas.company_schemas.company_request_dto import CompanySignupRequestDto, CompanyLoginRequestDto
 from src.schemas.jobseeker_schemas.jobseeker_response_dto import JobseekerSignupResponseDto, JobseekerLoginResponseDto
 from src.schemas.company_schemas.company_response_dto import CompanySignupResponseDto, CompanyLoginResponseDto
-
+from src.repositories.job_group_repository.job_group_repository import JobGroupRepository
 class AuthService:
     def __init__(self, db: Session):
         self.jobseeker_repo = JobseekerRepository(db)
         self.company_repo = CompanyRepository(db)
+        self.job_group_repo = JobGroupRepository(db)
 
     def signup_jobseeker(self, request: JobseekerSignupRequestDto) -> JobseekerSignupResponseDto:
         # 이메일 중복 확인
@@ -60,7 +61,7 @@ class AuthService:
             )
             
         return JobseekerLoginResponseDto(
-            message="로그인 성공",
+            message="200 OK",
             user_id=user.id,
             name=user.name,
             email=user.email
@@ -95,7 +96,7 @@ class AuthService:
 
     def login_company(self, request: CompanyLoginRequestDto) -> CompanyLoginResponseDto:
         company = self.company_repo.get_by_email(request.email)
-        
+        job_group = self.job_group_repo.get_by_company_id(company.id)
         # 인증 (프로토타입: 평문 비교)
         if not company or company.password != request.password:
             raise HTTPException(
@@ -104,8 +105,9 @@ class AuthService:
             )
             
         return CompanyLoginResponseDto(
-            message="로그인 성공",
+            message="200 OK",
             company_id=company.id,
+            job_group_id=job_group.id,
             name=company.name,
             email=company.email
         )

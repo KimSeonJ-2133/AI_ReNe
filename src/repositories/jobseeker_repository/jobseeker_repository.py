@@ -66,3 +66,10 @@ class JobseekerRepository:
 - **인재 유형**: {talent}
 """
         return markdown_text.strip()
+
+    def update_rcs_and_talent_type(self, jobseeker_id: int, rcs_level: int, talent_type: str) -> None:
+        jobseeker = self.db.query(Jobseeker).filter(Jobseeker.id == jobseeker_id).first()
+        if jobseeker:
+            jobseeker.rcs_level = rcs_level
+            jobseeker.talent_type = talent_type
+            self.db.commit()
