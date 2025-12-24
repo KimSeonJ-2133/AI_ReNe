@@ -225,7 +225,7 @@ class CompanyAIInterviewService:
                 jobseeker_ncs_level = self.jobseeker_repo.get_by_id(db_payload.get("jobseeker_id")).ncs_level
                 # Talent_type 결정
                 ai_rcs_level = db_payload.get("rcs_level")
-                talent_type = self._calculate_talent_type(jobseeker_ncs_level, )
+                talent_type = self._calculate_talent_type(jobseeker_ncs_level, ai_rcs_level)
                 print(f"분석된] RCS: {ai_rcs_level} (구직자 NCS: {jobseeker_ncs_level}) 인재 유형: {talent_type}")
 
                 self.jobseeker_repo.update_rcs_and_talent_type(db_payload.get("jobseeker_id"), ai_rcs_level, talent_type)
