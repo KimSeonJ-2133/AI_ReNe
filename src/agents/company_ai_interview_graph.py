@@ -70,7 +70,6 @@ class SkillDetail(BaseModel):
 # 최종 분석 & 평가를 위한 모델 정의
 class FinalAnalystOutput(BaseModel):
     final_score: float = Field(description="종합 점수 (0-100)")
-    rcs_level: int = Field(description="RCS 점수 (1~8 사이의 정수)")
     interview_result: str = Field(description="PASS, HOLD, FAIL 중 하나")
     summary: str = Field(description="면접 한 줄 요약")
     detailed_report: str = Field(description="면접 상세 보고서")
@@ -78,6 +77,7 @@ class FinalAnalystOutput(BaseModel):
     best_answer: str = Field(description="면접자의 최고의 답변 내용 - 최고의 답변인 이유")
     worst_answer: str = Field(description="면접자의 최악의 답변 내용 - 최악의 답변인 이유")
     total_feedback_for_jobseeker: str = Field(description="지원자에게 줄 AI의 피드백")
+    rcs_level: int = Field(description="RCS 점수 (1~8 사이의 정수)")
 
 
 # === Agent Class ===
@@ -246,7 +246,7 @@ class CompanyAIInterviewAgent:
         prompt = ChatPromptTemplate.from_messages([
             ("system", analyst_prompt),
             ("system", "반드시 다음 형식 요구사항을 준수하여 JSON만 출력하세요:\n{format_instructions}"),
-            ("human", "전체 면접 기록\n{full_transcript}")
+            ("human", "[전체 면접 기록]\n{full_transcript}"),
         ])
         
         chain = prompt | self.llm | parser
@@ -272,7 +272,8 @@ class CompanyAIInterviewAgent:
                 "skills_evaluation": [], # 빈 리스트
                 "best_answer": "-",
                 "worst_answer": "-",
-                "total_feedback_for_jobseeker": "-"
+                "total_feedback_for_jobseeker": "-",
+                "rcs_level": 1
             }
 
         # DB Payload 구성
@@ -286,6 +287,7 @@ class CompanyAIInterviewAgent:
             "best_answer": final_result["best_answer"],
             "worst_answer": final_result["worst_answer"],
             "total_advice": final_result["total_feedback_for_jobseeker"],
+            "rcs_level": final_result["rcs_level"],
             
             # DB의 skills_evaluation 컬럼은 JSON 타입이므로 리스트(List[dict]) 그대로 저장하면 됩니다.
             "skills_evaluation": final_result["skills_evaluation"],

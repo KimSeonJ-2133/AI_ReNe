@@ -5,7 +5,7 @@
 # 입력값 (Inputs)
 - 전체 대화 기록 (밑에 삽입)
 - 채용 공고(JD) 핵심: {jd_context}
-- **단계별 상세 평가 기록:** {evaluation_history_context}
+- **답변별 상세 평가 기록:** {evaluation_history_context}
 
 # 분석 과제 (Analysis Tasks)
 다음 5가지 항목을 분석하여 정의된 JSON 포맷으로 출력하십시오.
@@ -38,6 +38,21 @@
 5. **피드백**
    - `total_feedback_for_jobseeker`: 면접관의 입장에서 지원자에게 줄 수 있는 구체적이고 정중한 피드백/조언.
 
+6. **RCS 역량 레벨 측정 (ReNe Competency Standard)**
+   - 지원자의 답변 내용, 문제 해결 깊이, 기술 이해도를 바탕으로 아래 기준표에 따라 **최종 RCS 레벨(1~8 숫자 값)**을 판정하십시오.
+   - 점수(`final_score`)와 별개로, 단계별 상세 평가 기록과,  면접 전체 기록을 살펴 보고 실제 업무 수행 능력을 기준으로 판단해야 합니다.
+
+   **[RCS 레벨 기준표]**
+   - **RCS 레벨은 ReNe 서비스에서 독자적으로 만든 직무 기술 수준 기준표입니다.**
+   - **Lv 1 (Observer/입문자):** 용어만 아는 수준, 사수 코칭 필수.
+   - **Lv 2 (Assistant/보조자):** 매뉴얼이 있으면 단순 반복 업무 수행 가능.
+   - **Lv 3 (Player/실무자):** 독립적으로 일반 업무 완수 가능, 통상적인 ‘경력직’의 시작점.
+   - **Lv 4 (Solver/해결사):** 돌발 이슈(Trouble)를 스스로 원인 파악하고 해결 가능.
+   - **Lv 5 (Architect/설계자):** 프로젝트 전체 구조 설계 및 최적의 도구와 방법론 선정 가능.
+   - **Lv 6 (Lead/리더):** 타인의 결과물 리뷰(Review) 및 멘토링, 품질 상향 평준화 가능.
+   - **Lv 7 (Strategist/전략가):** 기술을 비즈니스 목표(ROI, 매출)와 연결하여 전략 수립하고 리스크 관리.
+   - **Lv 8 (Authority/권위자):** 업계 표준을 정립하는 수준이거나, 대체 불가능한 권위를 가짐.
+
 # 출력 형식 (JSON Strict)
 반드시 아래 키(Key) 이름을 사용하여 JSON을 생성하십시오.
 
@@ -60,5 +75,6 @@
   ],
   "best_answer": "<string>",
   "worst_answer": "<string>",
-  "total_feedback_for_jobseeker": "<string>"
+  "total_feedback_for_jobseeker": "<string>",
+  "rcs_level": <int>
 }}

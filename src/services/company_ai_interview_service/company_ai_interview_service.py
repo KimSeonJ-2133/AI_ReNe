@@ -165,8 +165,7 @@ class CompanyAIInterviewService:
         
         # 2. LangGraph 실행 (답변 주입 -> 평가 -> 질문 생성)
         try:
-            # 1) HumanMessage 주입 
-            # 2) invoke(None) -> start_route가 'strict_evaluator_node'로 보냄
+            # 1) HumanMessage 주입
             # 3) Evaluator -> Interviewer -> END
             ai_state = await self.agent.process_answer(session_id, user_answer)
         except Exception as e:
@@ -206,7 +205,7 @@ class CompanyAIInterviewService:
         # 4. 면접 종료 여부 확인 및 처리
         if ai_state.get("status") == "done":
             
-            print("면접 종료. 결과 저장 시작")
+            print("면접 종료. 결과 분석 시작.")
             
             # 4-1 세션 상태 업데이트
             session_record.status = "COMPLETED"
@@ -220,6 +219,19 @@ class CompanyAIInterviewService:
 
                 created_result_id = interview_result.id
             
+            # 면접자 update 로직
+            try: 
+                # NCS 레벨 가져오기
+                jobseeker_ncs_level = self.jobseeker_repo.get_by_id(db_payload.get("jobseeker_id")).ncs_level
+                # Talent_type 결정
+                ai_rcs_level = db_payload.get("rcs_level")
+                talent_type = self._calculate_talent_type(jobseeker_ncs_level, )
+                print(f"분석된] RCS: {ai_rcs_level} (구직자 NCS: {jobseeker_ncs_level}) 인재 유형: {talent_type}")
+
+                self.jobseeker_repo.update_rcs_and_talent_type(db_payload.get("jobseeker_id"), ai_rcs_level, talent_type)
+
+            except Exception as e:
+                print(f"RCS 업데이트 실패: {e}")
             # 4-3. 트랜잭션 커밋
             self.session_repo.update(session_record) # update 내부에서 commit 수행
 
@@ -325,12 +337,11 @@ class CompanyAIInterviewService:
             end_time = formatted_end_time
         )
 
-    async def _update_jobseekre_info(self, jobseeker_id: int):
-        """
-        기업 AI 면접
-        """
-        jobseeker = self.jobseeker_repo.get_by_id(jobseeker_id)
-        jobseeker.ncs_level = datetime.now()
-        self.jobseeker_repo.update(jobseeker)
-
-        return ""
+    def _calculate_talent_type(self, ncs_level: int, rcs_level: int) -> str:
+        if ncs_level >= 6 and rcs_level >= 6:
+            return "PROVEN_ACE"
+        if ncs_level + 2 <= rcs_level:
+            return "HIDDEN_GEM"
+        if ncs_level -2 >= rcs_level:
+            return "BUBBLE"
+        return "LEARNER"
