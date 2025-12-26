@@ -391,4 +391,4 @@ class CompanyAIInterviewAgent:
             await graph.aupdate_state(config, update_values)
 
             # 3. 그래프 실행
-            return await graph.ainvoke(None, config)
+            return await graph.ainvoke({"messages": ["면접 종료"]}, config)
