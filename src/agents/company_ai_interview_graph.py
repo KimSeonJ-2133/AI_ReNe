@@ -388,7 +388,9 @@ class CompanyAIInterviewAgent:
                 "red_flag_count": 3,
             } 
 
+            # red_flag_count를 3로 바꾸고, interview_stage를 CLOSING으로 바꾸기
             await graph.aupdate_state(config, update_values)
 
+            input_message = "면접 종료"
             # 3. 그래프 실행
-            return await graph.ainvoke({"messages": ["면접 종료"]}, config)
+            return await graph.ainvoke({"messages": [input_message]}, config)
