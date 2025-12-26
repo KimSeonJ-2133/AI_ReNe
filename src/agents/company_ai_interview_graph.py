@@ -368,3 +368,27 @@ class CompanyAIInterviewAgent:
             return await graph.ainvoke({"messages": [input_message]}, config)
 
     
+    async def end_interview(self, session_id: str):
+        """
+        [강제 종료] 현재 상태를 'CLOSING'으로 강제 변경하고,
+        곧바로 최종 분석(Analyst) 노드를 실행하여 결과를 반환합니다.
+        """
+        config = {"configurable": {"thread_id": session_id}}
+
+        async with aiosqlite.connect(self.db_path) as conn:
+            # 1. 연결 및 패치
+            conn.is_alive = lambda: True
+            checkpointer = AsyncSqliteSaver(conn)
+            graph = self.graph_builder.compile(checkpointer=checkpointer)
+
+            # 2. 상태 강제 업데이트 (라우팅 로직을 속이기 위해)
+            # interview_stage를 CLOSING으로 바꾸고 혹시 모르니 red_flag도 강제 종료 조건 충족
+            update_values = {
+                "interview_stage": "CLOSING",
+                "red_flag_count": 3,
+            } 
+
+            await graph.aupdate_state(config, update_values)
+
+            # 3. 그래프 실행
+            return await graph.ainvoke(None, config)

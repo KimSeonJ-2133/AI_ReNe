@@ -336,7 +336,78 @@ class CompanyAIInterviewService:
             total_advice = interview_result.total_advice,
             end_time = formatted_end_time
         )
+    
+    async def force_end_interview(self, session_id: str) -> company_ai_interview_response_dto.InterviewResponse:
+        """
+        면접을 강제로 종료하고, 현재까지의 대화 내용만을 바탕으로 최종 분석을 수행합니다.
+        """
+        # 1. 면접 세션 조회
+        session_record = self.session_repo.get_by_session_id(session_id)
+        if not session_record:
+            raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다.")
+        if session_record.status == "COMPLETED":
+             raise HTTPException(status_code=400, detail="이미 종료된 면접입니다.")
+        
+        # 2. Agent에게 종료 요청
+        try:
+            ai_state = await self.agent.end_interview(session_id)
+        except Exception as e:
+            print(f"면접 강제 종료 중 에러 발생: {e}")
+            raise HTTPException(status_code=500, detail="면접 강제 중 에러 발생.")
 
+        # 3. 결과 저장 로직 (기존 process_user_answer의 종료 로직과 동일하게 재사용)
+            
+        print("면접 강제 종료. 결과 분석 시작.")
+        
+        # 3-1 세션 상태 업데이트
+        session_record.status = "COMPLETED"
+
+        # 3-2. 결과 테이블(Result) 저장
+        created_result_id = None
+        db_payload = ai_state.get("db_payload")
+
+        if db_payload:
+            # 외래키 주입 (어떤 세션의 결과인지)
+            db_payload["session_id"] = session_id 
+            interview_result = self.interview_repo.create(db_payload)
+
+            created_result_id = interview_result.id
+        
+        # 면접자 update 로직
+        try: 
+            # NCS 레벨 가져오기
+            jobseeker_ncs_level = self.jobseeker_repo.get_by_id(db_payload.get("jobseeker_id")).ncs_level
+            # Talent_type 결정
+            ai_rcs_level = db_payload.get("rcs_level")
+            talent_type = self._calculate_talent_type(jobseeker_ncs_level, ai_rcs_level)
+            print(f"분석된] RCS: {ai_rcs_level} (구직자 NCS: {jobseeker_ncs_level}) 인재 유형: {talent_type}")
+
+            self.jobseeker_repo.update_rcs_and_talent_type(db_payload.get("jobseeker_id"), ai_rcs_level, talent_type)
+
+        except Exception as e:
+            print(f"RCS 업데이트 실패: {e}")
+
+        # 3-3. 트랜잭션 커밋
+        self.session_repo.update(session_record) # update 내부에서 commit 수행
+
+        closing_ment = "면접이 중간에 강제 종료되었습니다. 최종 결과를 확인해주세요."
+        ai_audio_bytes = tts_service.speak(closing_ment) # None
+
+        ai_audio_base64 = None
+        if ai_audio_bytes:
+            ai_audio_base64 = base64.b64encode(ai_audio_bytes).decode('utf-8')
+
+        return company_ai_interview_response_dto.InterviewResponse(
+            message="200 OK, 면접 완료.",
+            session_id=session_id,
+            current_turn=session_record.current_turn,
+            interview_stage="CLOSING",
+            ai_message=closing_ment,
+            status="done",
+            ai_audio_base64=ai_audio_base64,
+            interview_result_id=created_result_id
+        )
+        
     def _calculate_talent_type(self, ncs_level: int, rcs_level: int) -> str:
         if ncs_level >= 6 and rcs_level >= 6:
             return "PROVEN_ACE"

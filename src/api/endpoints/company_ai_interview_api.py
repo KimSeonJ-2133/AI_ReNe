@@ -40,3 +40,11 @@ async def get_interview_result_by_id(
 ):
     service = CompanyAIInterviewService(db)
     return await service.get_interview_result_by_interview_id(interview_id)
+
+@router.post("/force-end", response_model=company_ai_interview_response_dto.InterviewResponse)
+async def force_end_interview(
+    request: company_ai_interview_request_dto.EndInterviewRequest,
+    db: Session = Depends(get_db)
+):
+    service = CompanyAIInterviewService(db)
+    return await service.force_end_interview(request.session_id)
