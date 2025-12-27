@@ -60,6 +60,8 @@ class EvaluationOutput(BaseModel):
     result: str = Field(description="평가 결과: PASS, WEAK, FAIL 중 하나")
     reason: str = Field(description="평가 근거 (한국어)")
     follow_up_needed: bool = Field(description="꼬리 질문 필요 여부 (True/False)")
+    # 더 나은 답변 필드 추가
+    better_answer: str = Field(description="지원자의 답변을 보완하여 더 논리적이고 구체적으로 개선한 모범 답변")
 
 # 최종 평가를 위한 서브 모델 정의
 class SkillDetail(BaseModel):
@@ -261,6 +263,7 @@ class CompanyAIInterviewAgent:
                 "format_instructions": parser.get_format_instructions()
             })
             final_result = final_result.dict()
+
         except Exception as e:
             print(f"최종 분석 중 예외 발생: {e}")
             # 에러 발생 시 기본값
