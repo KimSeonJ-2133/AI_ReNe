@@ -63,6 +63,12 @@ class EvaluationOutput(BaseModel):
     # 더 나은 답변 필드 추가
     better_answer: str = Field(description="지원자의 답변을 보완하여 더 논리적이고 구체적으로 개선한 모범 답변")
 
+class QnAFeedback(BaseModel):
+    question: str
+    user_answer: str
+    better_answer: str
+    score: int
+
 # 최종 평가를 위한 서브 모델 정의
 class SkillDetail(BaseModel):
     skill_name: str = Field(description="기술 스택 이름 (예: Python, AWS, 문제해결능력 등)")
@@ -79,6 +85,7 @@ class FinalAnalystOutput(BaseModel):
     best_answer: str = Field(description="면접자의 최고의 답변 내용 - 최고의 답변인 이유")
     worst_answer: str = Field(description="면접자의 최악의 답변 내용 - 최악의 답변인 이유")
     total_feedback_for_jobseeker: str = Field(description="지원자에게 줄 AI의 피드백")
+    qna_feedback_list: List[QnAFeedback] = Field(description="각 질문에 대한 유저 답변과 AI의 모범 답안 비교 리스트")
     rcs_level: int = Field(description="RCS 점수 (1~8 사이의 정수)")
 
 
@@ -196,7 +203,7 @@ class CompanyAIInterviewAgent:
                 "question_text":last_ai_msg,
                 "answer_text": last_human_msg,
                 "jd_context": state.get("jd_context", ""),
-
+                "resume_context": state.get("resume_context", ""),
                 "format_instructions": parser.get_format_instructions()
             })
             eval_dict = eval_result.dict()

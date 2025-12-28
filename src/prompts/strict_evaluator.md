@@ -12,9 +12,9 @@
 - 현재 질문 (Current Question): {question_text}
 - 사용자 답변 (User Answer): {answer_text}
 - 사용자 이력서 (Resume Context): {resume_context}
-- 평가 기준 (Context): 채용 공고(JD) 및 이력서 내용 기반
-[채용공고문(job_description)]
+- 채용공고 (JD):
 {jd_context}
+- 평가 기준 (Context): 채용 공고(JD) 및 이력서 내용 기반
 
 # 평가 기준 (Scoring & Decision Logic)
 답변을 분석하여 0~10점 사이의 점수를 부여하고, 이에 따라 판정(Result)을 내리세요.
