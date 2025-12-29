@@ -208,9 +208,17 @@ class CompanyAIInterviewAgent:
             })
             eval_dict = eval_result.dict()
 
+            eval_dict["question"] = last_ai_msg
+            eval_dict["user_answer"] = last_human_msg
+            
         except Exception as e:
             print(f"평가 파싱 에러: {e}")
-            eval_dict = {"score": 5, "result": "WEAK", "reason": "Parsing Error", "follow_up_needed": False}
+            eval_dict = {
+                "score": 5, "result": "WEAK", "reason": "Parsing Error", "follow_up_needed": False,
+                "better_answer": "평가 중 오류가 발생하여 모범 답안을 생성하지 못했습니다.",
+                "question": last_ai_msg,
+                "user_answer": last_human_msg
+            }
 
         # RED FLAG 업데이트
         score = eval_dict.get("score", 5)
@@ -230,8 +238,8 @@ class CompanyAIInterviewAgent:
         new_entry = {
             "turn": state.get("current_turn"),
             "stage": state.get("interview_stage"),
-            "question": last_ai_msg,
-            "answer": last_human_msg,
+            # "question": last_ai_msg,
+            # "answer": last_human_msg,
             "eval": eval_dict
         }
 
@@ -283,10 +291,25 @@ class CompanyAIInterviewAgent:
                 "best_answer": "-",
                 "worst_answer": "-",
                 "total_feedback_for_jobseeker": "-",
-                "rcs_level": 1
+                "rcs_level": 1,
+                "qna_feedback_list": [],
             }
 
         # DB Payload 구성
+
+        qna_feedback_list = []
+
+        for entry in state.get("evaluation_history", []):
+            eval_data = entry.get("eval", {})
+
+            if "better_answer" in eval_data:
+                qna_feedback_list.append({
+                    "question": eval_data.get("question", ""),
+                    "user_answer": eval_data.get("user_answer", ""),
+                    "better_answer": eval_data.get("better_answer", ""),
+                    "score": eval_data.get("score", 0)
+                })
+
         db_payload = {
             "jobseeker_id": state.get("jobseeker_id", 1),
             "job_group_id": state.get("job_group_id", 1),
@@ -301,7 +324,8 @@ class CompanyAIInterviewAgent:
             
             # DB의 skills_evaluation 컬럼은 JSON 타입이므로 리스트(List[dict]) 그대로 저장하면 됩니다.
             "skills_evaluation": final_result["skills_evaluation"],
-            "full_transcript": transcript
+            "full_transcript": transcript,
+            "better_answer_list": qna_feedback_list
         }
             
         return {
