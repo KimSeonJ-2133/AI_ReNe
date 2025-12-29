@@ -334,6 +334,7 @@ class CompanyAIInterviewService:
             best_answer = interview_result.best_answer,
             worst_answer = interview_result.worst_answer,
             total_advice = interview_result.total_advice,
+            better_answer_list = interview_result.better_answer_list,
             end_time = formatted_end_time
         )
     

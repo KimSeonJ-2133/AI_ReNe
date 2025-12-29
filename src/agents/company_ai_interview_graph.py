@@ -227,7 +227,7 @@ class CompanyAIInterviewAgent:
 
         if result == 'FAIL':
             new_current_flag =  current_flag + 1
-            print(f"답변에서 결격 사유 감지. (연속 {new_current_flag}회)")
+            print(f"답변에서 결격 사유 감지. (점수: {score}점, 연속 {new_current_flag}회)")
         else:
             new_current_flag = 0
             if result == "WEAK":
