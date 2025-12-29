@@ -6,6 +6,9 @@ class StartInterviewRequest(BaseModel):
     company_id: int
     job_group_id: int
 
+class EndInterviewRequest(BaseModel):
+    session_id: str
+    
 # class InterviewAnswerRequest(BaseModel):
 #     session_id: str
 #     answer: str   

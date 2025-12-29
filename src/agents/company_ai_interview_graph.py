@@ -60,6 +60,14 @@ class EvaluationOutput(BaseModel):
     result: str = Field(description="평가 결과: PASS, WEAK, FAIL 중 하나")
     reason: str = Field(description="평가 근거 (한국어)")
     follow_up_needed: bool = Field(description="꼬리 질문 필요 여부 (True/False)")
+    # 더 나은 답변 필드 추가
+    better_answer: str = Field(description="지원자의 답변을 보완하여 더 논리적이고 구체적으로 개선한 모범 답변")
+
+class QnAFeedback(BaseModel):
+    question: str
+    user_answer: str
+    better_answer: str
+    score: int
 
 # 최종 평가를 위한 서브 모델 정의
 class SkillDetail(BaseModel):
@@ -77,6 +85,7 @@ class FinalAnalystOutput(BaseModel):
     best_answer: str = Field(description="면접자의 최고의 답변 내용 - 최고의 답변인 이유")
     worst_answer: str = Field(description="면접자의 최악의 답변 내용 - 최악의 답변인 이유")
     total_feedback_for_jobseeker: str = Field(description="지원자에게 줄 AI의 피드백")
+    qna_feedback_list: List[QnAFeedback] = Field(description="각 질문에 대한 유저 답변과 AI의 모범 답안 비교 리스트")
     rcs_level: int = Field(description="RCS 점수 (1~8 사이의 정수)")
 
 
@@ -194,14 +203,22 @@ class CompanyAIInterviewAgent:
                 "question_text":last_ai_msg,
                 "answer_text": last_human_msg,
                 "jd_context": state.get("jd_context", ""),
-
+                "resume_context": state.get("resume_context", ""),
                 "format_instructions": parser.get_format_instructions()
             })
             eval_dict = eval_result.dict()
 
+            eval_dict["question"] = last_ai_msg
+            eval_dict["user_answer"] = last_human_msg
+            
         except Exception as e:
             print(f"평가 파싱 에러: {e}")
-            eval_dict = {"score": 5, "result": "WEAK", "reason": "Parsing Error", "follow_up_needed": False}
+            eval_dict = {
+                "score": 5, "result": "WEAK", "reason": "Parsing Error", "follow_up_needed": False,
+                "better_answer": "평가 중 오류가 발생하여 모범 답안을 생성하지 못했습니다.",
+                "question": last_ai_msg,
+                "user_answer": last_human_msg
+            }
 
         # RED FLAG 업데이트
         score = eval_dict.get("score", 5)
@@ -210,7 +227,7 @@ class CompanyAIInterviewAgent:
 
         if result == 'FAIL':
             new_current_flag =  current_flag + 1
-            print(f"답변에서 결격 사유 감지. (연속 {new_current_flag}회)")
+            print(f"답변에서 결격 사유 감지. (점수: {score}점, 연속 {new_current_flag}회)")
         else:
             new_current_flag = 0
             if result == "WEAK":
@@ -221,8 +238,8 @@ class CompanyAIInterviewAgent:
         new_entry = {
             "turn": state.get("current_turn"),
             "stage": state.get("interview_stage"),
-            "question": last_ai_msg,
-            "answer": last_human_msg,
+            # "question": last_ai_msg,
+            # "answer": last_human_msg,
             "eval": eval_dict
         }
 
@@ -261,6 +278,7 @@ class CompanyAIInterviewAgent:
                 "format_instructions": parser.get_format_instructions()
             })
             final_result = final_result.dict()
+
         except Exception as e:
             print(f"최종 분석 중 예외 발생: {e}")
             # 에러 발생 시 기본값
@@ -273,10 +291,25 @@ class CompanyAIInterviewAgent:
                 "best_answer": "-",
                 "worst_answer": "-",
                 "total_feedback_for_jobseeker": "-",
-                "rcs_level": 1
+                "rcs_level": 1,
+                "qna_feedback_list": [],
             }
 
         # DB Payload 구성
+
+        qna_feedback_list = []
+
+        for entry in state.get("evaluation_history", []):
+            eval_data = entry.get("eval", {})
+
+            if "better_answer" in eval_data:
+                qna_feedback_list.append({
+                    "question": eval_data.get("question", ""),
+                    "user_answer": eval_data.get("user_answer", ""),
+                    "better_answer": eval_data.get("better_answer", ""),
+                    "score": eval_data.get("score", 0)
+                })
+
         db_payload = {
             "jobseeker_id": state.get("jobseeker_id", 1),
             "job_group_id": state.get("job_group_id", 1),
@@ -291,7 +324,8 @@ class CompanyAIInterviewAgent:
             
             # DB의 skills_evaluation 컬럼은 JSON 타입이므로 리스트(List[dict]) 그대로 저장하면 됩니다.
             "skills_evaluation": final_result["skills_evaluation"],
-            "full_transcript": transcript
+            "full_transcript": transcript,
+            "better_answer_list": qna_feedback_list
         }
             
         return {
@@ -368,3 +402,29 @@ class CompanyAIInterviewAgent:
             return await graph.ainvoke({"messages": [input_message]}, config)
 
     
+    async def end_interview(self, session_id: str):
+        """
+        [강제 종료] 현재 상태를 'CLOSING'으로 강제 변경하고,
+        곧바로 최종 분석(Analyst) 노드를 실행하여 결과를 반환합니다.
+        """
+        config = {"configurable": {"thread_id": session_id}}
+
+        async with aiosqlite.connect(self.db_path) as conn:
+            # 1. 연결 및 패치
+            conn.is_alive = lambda: True
+            checkpointer = AsyncSqliteSaver(conn)
+            graph = self.graph_builder.compile(checkpointer=checkpointer)
+
+            # 2. 상태 강제 업데이트 (라우팅 로직을 속이기 위해)
+            # interview_stage를 CLOSING으로 바꾸고 혹시 모르니 red_flag도 강제 종료 조건 충족
+            update_values = {
+                "interview_stage": "CLOSING",
+                "red_flag_count": 3,
+            } 
+
+            # red_flag_count를 3로 바꾸고, interview_stage를 CLOSING으로 바꾸기
+            await graph.aupdate_state(config, update_values)
+
+            input_message = "면접 종료"
+            # 3. 그래프 실행
+            return await graph.ainvoke({"messages": [input_message]}, config)

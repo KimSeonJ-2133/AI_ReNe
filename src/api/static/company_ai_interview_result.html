@@ -69,7 +69,25 @@
         .best .answer-label { color: #047857; }
         .worst .answer-label { color: #b91c1c; }
         
-        /* 5. 종합 조언 */
+        /* 5. Q&A 피드백 섹션 (NEW) */
+        .qna-list { display: flex; flex-direction: column; gap: 20px; }
+        .qna-item { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #fff; }
+        .qna-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+        .qna-question { font-weight: 700; font-size: 1.05rem; color: var(--text-main); width: 85%; }
+        .qna-question::before { content: "Q."; color: var(--primary); margin-right: 5px; font-size: 1.1rem; }
+        .qna-score { background: var(--secondary); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
+        
+        .qna-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .qna-box { padding: 15px; border-radius: 8px; font-size: 0.9rem; }
+        .qna-box-label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.85rem; }
+        
+        .user-answer { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-sub); }
+        .user-answer .qna-box-label { color: var(--secondary); }
+        
+        .better-answer { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--text-main); }
+        .better-answer .qna-box-label { color: var(--primary); }
+
+        /* 6. 종합 조언 */
         .advice-box { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
 
         /* 컨트롤 패널 (테스트용) */
@@ -80,7 +98,7 @@
 
         /* 반응형 */
         @media (max-width: 768px) {
-            .summary-grid, .answer-grid { grid-template-columns: 1fr; }
+            .summary-grid, .answer-grid, .qna-content-grid { grid-template-columns: 1fr; }
             .score-box { border-right: none; border-bottom: 1px solid #eee; padding-bottom: 20px; padding-right: 0; }
             .total-score { font-size: 3rem; }
         }
@@ -147,6 +165,12 @@
         </div>
     </section>
 
+    <section class="card">
+        <h2>💬 Q&A 상세 피드백 및 모범 답안</h2>
+        <div class="qna-list" id="qna-container">
+            </div>
+    </section>
+
     <section class="card advice-box">
         <h2>🚀 AI의 피드백 & 조언</h2>
         <div class="report-text" id="total-advice">
@@ -182,6 +206,7 @@
             renderReport(data);
 
         } catch (error) {
+            console.error(error);
             alert(error.message);
             // 테스트용 Mock Data (API 실패 시 보여줄 예시 데이터)
             renderMockData(); 
@@ -193,8 +218,8 @@
 
     function renderReport(data) {
         // 1. 기본 정보
-        document.getElementById('jobseeker-id').textContent = '이연';
-        document.getElementById('job_group_id').textContent = '주(에스에프에이) - AI에이전트 개발자';
+        document.getElementById('jobseeker-id').textContent = data.jobseeker_id || '-';
+        document.getElementById('job_group_id').textContent = data.job_group_id || '-';
         document.getElementById('session-id').textContent = data.session_id;
         document.getElementById('end-time').textContent = data.end_time || new Date().toLocaleString();
 
@@ -202,7 +227,6 @@
         const scoreEl = document.getElementById('total-score');
         const badgeEl = document.getElementById('ai-result');
         
-        // 숫자 카운트업 애니메이션
         animateValue(scoreEl, 0, data.total_score, 1000);
 
         badgeEl.textContent = data.ai_result;
@@ -212,9 +236,8 @@
 
         // 3. 스킬 평가 (동적 생성)
         const skillsContainer = document.getElementById('skills-container');
-        skillsContainer.innerHTML = ''; // 초기화
+        skillsContainer.innerHTML = ''; 
 
-        // 문자열로 온 경우 파싱 (혹시 모를 대비)
         let skills = data.skills_evaluation;
         if (typeof skills === 'string') {
             try { skills = JSON.parse(skills); } catch(e) {}
@@ -222,7 +245,7 @@
 
         if (Array.isArray(skills)) {
             skills.forEach(skill => {
-                const percentage = (skill.score / 8) * 100; // 8점 만점 기준 % 환산
+                const percentage = (skill.score / 8) * 100; 
                 const html = `
                     <div class="skill-item">
                         <div class="skill-header">
@@ -238,7 +261,6 @@
                 skillsContainer.innerHTML += html;
             });
             
-            // 프로그레스바 애니메이션 트리거
             setTimeout(() => {
                 document.querySelectorAll('.progress-bar').forEach(bar => {
                     bar.style.width = bar.dataset.width;
@@ -246,7 +268,43 @@
             }, 100);
         }
 
-        // 4. 나머지 텍스트 필드
+        // 4. Q&A 상세 리스트 (NEW Logic)
+        const qnaContainer = document.getElementById('qna-container');
+        qnaContainer.innerHTML = ''; // 초기화
+
+        let qnaList = data.better_answer_list;
+        // 혹시 문자열로 올 경우 대비
+        if (typeof qnaList === 'string') {
+            try { qnaList = JSON.parse(qnaList); } catch(e) {}
+        }
+
+        if (Array.isArray(qnaList) && qnaList.length > 0) {
+            qnaList.forEach((item, idx) => {
+                const html = `
+                    <div class="qna-item">
+                        <div class="qna-header">
+                            <div class="qna-question">${item.question}</div>
+                            <div class="qna-score">답변 점수: ${item.score}점</div>
+                        </div>
+                        <div class="qna-content-grid">
+                            <div class="qna-box user-answer">
+                                <span class="qna-box-label">🙋‍♂️ 지원자 답변</span>
+                                <div class="qna-text">${item.user_answer}</div>
+                            </div>
+                            <div class="qna-box better-answer">
+                                <span class="qna-box-label">🤖 AI 제안 답변</span>
+                                <div class="qna-text">${item.better_answer}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                qnaContainer.innerHTML += html;
+            });
+        } else {
+            qnaContainer.innerHTML = '<div style="text-align:center; color:#999;">Q&A 상세 데이터가 없습니다.</div>';
+        }
+
+        // 5. 나머지 텍스트 필드
         document.getElementById('report-text').textContent = data.report;
         document.getElementById('best-answer').textContent = data.best_answer;
         document.getElementById('worst-answer').textContent = data.worst_answer;
@@ -263,7 +321,7 @@
             if (progress < 1) {
                 window.requestAnimationFrame(step);
             } else {
-                obj.innerHTML = end; // 소수점 처리 필요 시 toFixed(1)
+                obj.innerHTML = Math.round(end * 10) / 10; // 소수점 한자리까지
             }
         };
         window.requestAnimationFrame(step);
@@ -279,23 +337,34 @@
             total_score: 87.5,
             ai_result: "PASS",
             summary: "기술적 이해도가 매우 높으며, 실무 문제 해결 능력이 뛰어난 지원자입니다.",
-            report: "지원자는 Python 및 백엔드 아키텍처에 대한 깊은 이해를 보였습니다. 특히 비동기 처리와 DB 트랜잭션 관리에 대한 질문에서 구체적인 실무 경험을 근거로 논리적인 답변을 제시했습니다.\n다만, 클라우드 인프라 최적화 부분에서는 다소 원론적인 답변에 그친 점이 아쉬웠습니다.",
+            report: "지원자는 Python 및 백엔드 아키텍처에 대한 깊은 이해를 보였습니다. 특히 비동기 처리와 DB 트랜잭션 관리에 대한 질문에서 구체적인 실무 경험을 근거로 논리적인 답변을 제시했습니다.",
             skills_evaluation: [
                 { skill_name: "Python/Django", score: 7, reason: "ORM 최적화 및 비동기 처리에 대한 이해가 깊음" },
                 { skill_name: "Database", score: 8, reason: "인덱싱 전략과 트랜잭션 격리 수준을 정확히 설명함" },
-                { skill_name: "Communication", score: 6, reason: "핵심을 잘 전달하나, 다소 설명이 길어지는 경향이 있음" },
-                { skill_name: "Architecture", score: 5, reason: "MSA 경험은 부족해 보이나 모놀리식 구조 이해도는 높음" }
+                { skill_name: "Communication", score: 6, reason: "핵심을 잘 전달하나, 다소 설명이 길어지는 경향이 있음" }
             ],
-            best_answer: "데드락 발생 시 해결 방안에 대한 질문에서, 실제 로그 분석 경험과 격리 수준 조정을 통한 해결 사례를 든 점이 매우 인상적이었습니다.",
-            worst_answer: "Kubernetes 파드 스케일링 전략에 대한 질문에서 구체적인 메트릭 기준을 제시하지 못하고 오토스케일링의 개념만 설명했습니다.",
-            total_advice: "기술적 깊이는 충분하므로, 면접 시 결론부터 말하는 두괄식 화법을 연습한다면 더 좋은 평가를 받을 수 있을 것입니다. 인프라 관련 지식을 보완하면 풀스택 엔지니어로서 성장 가능성이 높습니다."
+            // 새로 추가된 Q&A List 데이터
+            better_answer_list: [
+                {
+                    question: "Python의 GIL(Global Interpreter Lock)이 멀티스레딩 성능에 미치는 영향에 대해 설명해주세요.",
+                    user_answer: "GIL 때문에 파이썬에서는 멀티스레딩을 해도 CPU 코어를 하나만 씁니다. 그래서 속도가 안 빨라집니다. 병렬 처리가 안 돼서 그렇습니다.",
+                    better_answer: "Python의 GIL은 한 번에 하나의 스레드만 바이트코드를 실행하도록 제한하여 CPU 바운드 작업에서 멀티스레딩의 이점을 제한합니다. 하지만 I/O 바운드 작업에서는 GIL이 해제되므로 유효합니다. CPU 바운드 작업 병렬화를 위해서는 multiprocessing 모듈을 사용하는 것이 좋습니다.",
+                    score: 60
+                },
+                {
+                    question: "RDB에서 인덱스를 많이 걸었을 때 발생할 수 있는 부작용은 무엇인가요?",
+                    user_answer: "인덱스를 많이 걸면 조회는 빠른데, 데이터를 넣거나 수정할 때 느려집니다. 인덱스도 같이 수정해야 하니까요.",
+                    better_answer: "인덱스가 과도하면 INSERT, UPDATE, DELETE 시 인덱스 테이블도 갱신해야 하므로 쓰기 성능이 저하됩니다. 또한 추가적인 디스크 공간을 차지하며, 옵티마이저가 잘못된 실행 계획을 선택할 가능성도 생깁니다. 따라서 카디널리티가 높은 컬럼 위주로 신중하게 설정해야 합니다.",
+                    score: 85
+                }
+            ],
+            best_answer: "데드락 발생 시 해결 방안에 대한 질문에서 로그 분석 경험을 든 점이 인상적이었습니다.",
+            worst_answer: "Kubernetes 파드 스케일링 전략에 대해 구체적인 메트릭 기준을 제시하지 못했습니다.",
+            total_advice: "기술적 깊이는 충분하므로, 면접 시 결론부터 말하는 두괄식 화법을 연습한다면 더 좋은 평가를 받을 수 있을 것입니다."
         };
         console.log("Rendering Mock Data...");
         renderReport(mock);
     }
-
-    // 페이지 로드 시 자동으로 1번 데이터 조회 시도 (또는 주석 처리)
-    // window.onload = fetchData;
 </script>
 
 </body>

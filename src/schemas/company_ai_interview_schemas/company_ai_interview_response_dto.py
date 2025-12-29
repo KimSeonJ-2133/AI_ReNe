@@ -16,8 +16,14 @@ class SkillDetailResponse(BaseModel):
     score: int
     reason: str
 
+class QnAFeedback(BaseModel):
+    question: str
+    user_answer: str
+    better_answer: str
+    score: int
+
 class InterviewResultResponse(BaseModel):
-    message: str = Field(..., description="API 응답 메시지")
+    message: str = Field(..., description="API 응답 메시지, 예: 200 OK")
     interview_id: int = Field(..., description="인터뷰 ID")
     session_id: str = Field(..., description="면접 세션 ID")
     
@@ -36,4 +42,5 @@ class InterviewResultResponse(BaseModel):
     best_answer: str = Field(..., description="최고의 답변")
     worst_answer: str = Field(..., description="최악의 답변")
     total_advice: str = Field(..., description="종합 피드백/조언")
+    better_answer_list: List[QnAFeedback] = Field(..., description="면접 질문, 면접자 답변, 보완된 답변, 점수 리스트")
     end_time: Optional[str] = Field(None, description="면접 종료 시간 (YYYY.MM.DD HH:MM)")

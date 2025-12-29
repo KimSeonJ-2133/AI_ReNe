@@ -27,6 +27,7 @@ class CompanyAIInterviewRepository:
                 best_answer=interview_data["best_answer"],
                 worst_answer=interview_data["worst_answer"],
                 total_advice=interview_data["total_advice"],
+                better_answer_list=interview_data["better_answer_list"],
                 end_time=datetime.now()
             )
             self.db.add(interview)
