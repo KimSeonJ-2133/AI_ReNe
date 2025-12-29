@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 from src.models.interview import CompanyAIInterview
+from src.models.user import Jobseeker
+from src.models.user import JobGroup
+from src.models.user import Company
 from datetime import datetime
 
 class CompanyAIInterviewRepository:
@@ -43,5 +46,24 @@ class CompanyAIInterviewRepository:
             self.db.query(CompanyAIInterview)
             .filter(CompanyAIInterview.id == interview_id)
             .order_by(CompanyAIInterview.created_at.desc())
+            .first()
+        )
+    
+    def get_with_details_by_id(self, interview_id: int):
+        """
+        인터뷰 정보와 함께 구직자명, 기업명, 직군명을 조인하여 가져옵니다.
+        """
+        return (
+            self.db.query(
+                CompanyAIInterview,
+                Jobseeker.name.label("jobseeker_name"),
+                Company.name.label("company_name"),
+                JobGroup.name.label("job_group_name"),
+            )
+            # Innter Join 수행
+            .join(Jobseeker, CompanyAIInterview.jobseeker_id == Jobseeker.id)
+            .join(JobGroup, CompanyAIInterview.job_group_id == JobGroup.id)
+            .join(Company, JobGroup.company_id == Company.id)
+            .filter(CompanyAIInterview.id == interview_id)
             .first()
         )

@@ -128,9 +128,9 @@
             </div>
             <div class="info-box">
                 <h2>지원자 정보</h2>
-                <div class="info-row"><div class="info-label">지원자 ID</div><div id="jobseeker-id">-</div></div>
-                <div class="info-row"><div class="info-label">직군 ID</div><div id="job_group_id">-</div></div>
-                <div class="info-row"><div class="info-label">세션 ID</div><div id="session-id" style="font-size: 0.8rem; color: #888;">-</div></div>
+                <div class="info-row"><div class="info-label">지원자 명</div><div id="jobseeker-name">-</div></div>
+                <div class="info-row"><div class="info-label">회사명</div><div id="company-name">-</div></div>
+                <div class="info-row"><div class="info-label">지원 직무 명</div><div id="job-group-name" style="font-size: 0.8rem; color: #888;">-</div></div>
                 
                 <div class="one-line-summary">
                     💡 <span id="summary-text">데이터를 불러오는 중입니다...</span>
@@ -218,9 +218,9 @@
 
     function renderReport(data) {
         // 1. 기본 정보
-        document.getElementById('jobseeker-id').textContent = data.jobseeker_id || '-';
-        document.getElementById('job_group_id').textContent = data.job_group_id || '-';
-        document.getElementById('session-id').textContent = data.session_id;
+        document.getElementById('jobseeker-name').textContent = data.jobseeker_name || '-';
+        document.getElementById('company-name').textContent = data.company_name || '-';
+        document.getElementById('job-group-name').textContent = data.job_group_name;
         document.getElementById('end-time').textContent = data.end_time || new Date().toLocaleString();
 
         // 2. 종합 점수 및 결과
