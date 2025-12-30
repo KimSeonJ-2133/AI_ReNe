@@ -346,7 +346,7 @@ class CompanyAIInterviewAgent:
         """평가 후 라우팅"""
         if state.get("red_flag_count", 0) >= 3:
             return "final_analyzer_node"
-        if state.get("interview_stage") == "CLOSING":
+        if state.get("current_turn") == 11:
             return "final_analyzer_node"
         return "interviewer_node"
     

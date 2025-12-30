@@ -242,6 +242,7 @@ class CompanyAIInterviewService:
             if ai_audio_bytes:
                 ai_audio_base64 = base64.b64encode(ai_audio_bytes).decode('utf-8')
 
+            print(f"면접 완료. session_id: {session_id}, current_turn: {session_record.current_turn}\ninterview_stage: {session_record.interview_stage}")
             return company_ai_interview_response_dto.InterviewResponse(
                 message="200 OK, 면접 완료.",
                 session_id=session_id,
@@ -268,6 +269,8 @@ class CompanyAIInterviewService:
             ai_audio_base64 = base64.b64encode(ai_audio_bytes).decode('utf-8')
 
         # 7. Response 결과 반환
+
+        print(f"인터뷰 진행 중. session_id: {session_id}, current_turn: {session_record.current_turn}\ninterview_stage: {session_record.interview_stage}")
         return company_ai_interview_response_dto.InterviewResponse(
             message="200 OK, 인터뷰 진행 중.",
             session_id=session_id,
@@ -310,34 +313,7 @@ class CompanyAIInterviewService:
         # 4. 변환된 텍스트로 'process_user_answer' 호출
         return await self.process_user_answer(session_id, transcribed_text)
     
-    async def get_interview_result_by_interview_id(self, company_ai_interview_id: int) -> company_ai_interview_response_dto.InterviewResultResponse:
-        interview_result = self.interview_repo.get_by_id(company_ai_interview_id)
-        if not interview_result:
-            raise HTTPException(status_code=404, detail="해당 id의 InterviewResult를 찾을 수 없습니다.")
-
-        # 날짜 포맷팅 로직 (YYYY.MM.DD HH:MM 형식)
-        formatted_end_time = None
-        if interview_result.end_time:
-            formatted_end_time = interview_result.end_time.strftime("%Y.%m.%d %H:%M")
-
-        return company_ai_interview_response_dto.InterviewResultResponse(
-            message="200 OK, 인터뷰 결과.",
-            interview_id = company_ai_interview_id,
-            session_id=interview_result.session_id,
-            jobseeker_id = interview_result.jobseeker_id,
-            job_group_id = interview_result.job_group_id,
-            report = interview_result.report,
-            summary = interview_result.summary,
-            total_score = interview_result.total_score,
-            skills_evaluation = interview_result.skills_evaluation,
-            ai_result = interview_result.ai_result,
-            best_answer = interview_result.best_answer,
-            worst_answer = interview_result.worst_answer,
-            total_advice = interview_result.total_advice,
-            better_answer_list = interview_result.better_answer_list,
-            end_time = formatted_end_time
-        )
-    
+    # 면접을 강제로 종료하고, 현재까지의 대화 내용만을 바탕으로 최종 분석을 수행
     async def force_end_interview(self, session_id: str) -> company_ai_interview_response_dto.InterviewResponse:
         """
         면접을 강제로 종료하고, 현재까지의 대화 내용만을 바탕으로 최종 분석을 수행합니다.
@@ -407,6 +383,43 @@ class CompanyAIInterviewService:
             status="done",
             ai_audio_base64=ai_audio_base64,
             interview_result_id=created_result_id
+        )
+    
+    # 인터뷰 결과를 반환
+    async def get_interview_result_by_interview_id(self, company_ai_interview_id: int) -> company_ai_interview_response_dto.InterviewResultResponse:
+        interview_result_row = self.interview_repo.get_with_details_by_id(company_ai_interview_id)
+        if not interview_result_row:
+            raise HTTPException(status_code=404, detail="해당 id의 InterviewResult를 찾을 수 없습니다.")
+
+        interview_result = interview_result_row.CompanyAIInterview  # 엔티티 객체
+        jobseeker_name = interview_result_row.jobseeker_name        # .label("jobseeker_name")으로 지정한 값
+        company_name = interview_result_row.company_name
+        job_group_name = interview_result_row.job_group_name
+
+        # 날짜 포맷팅 로직 (YYYY.MM.DD HH:MM 형식)
+        formatted_end_time = None
+        if interview_result.end_time:
+            formatted_end_time = interview_result.end_time.strftime("%Y.%m.%d %H:%M")
+
+        return company_ai_interview_response_dto.InterviewResultResponse(
+            message="200 OK, 인터뷰 결과.",
+            interview_id = company_ai_interview_id,
+            session_id=interview_result.session_id,
+            jobseeker_id = interview_result.jobseeker_id,
+            job_group_id = interview_result.job_group_id,
+            jobseeker_name = jobseeker_name,
+            company_name = company_name,
+            job_group_name = job_group_name,
+            report = interview_result.report,
+            summary = interview_result.summary,
+            total_score = interview_result.total_score,
+            skills_evaluation = interview_result.skills_evaluation,
+            ai_result = interview_result.ai_result,
+            best_answer = interview_result.best_answer,
+            worst_answer = interview_result.worst_answer,
+            total_advice = interview_result.total_advice,
+            better_answer_list = interview_result.better_answer_list,
+            end_time = formatted_end_time
         )
         
     def _calculate_talent_type(self, ncs_level: int, rcs_level: int) -> str:
